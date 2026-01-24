@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeniusHR - Gestione HR per Studi Odontoiatrici | Software Compliant CCNL</title>
+    <meta name="description" content="Il primo software HR specifico per studi dentistici. Compliance CCNL Studi Professionali, GDPR, sicurezza D.Lgs 81/2008. Prova gratuita 14 giorni.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --dark: #0f172a;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-400: #94a3b8;
+            --gray-600: #475569;
+            --white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: var(--white);
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gray-600);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 8rem 2rem 4rem;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-content h1 .highlight {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-content p {
+            font-size: 1.25rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--white);
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-600);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .badge-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .hero-image {
+            position: relative;
+        }
+
+        .hero-image img {
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+
+        .floating-card {
+            position: absolute;
+            background: var(--white);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .floating-card-1 {
+            top: 20%;
+            right: -30px;
+        }
+
+        .floating-card-2 {
+            bottom: 20%;
+            left: -30px;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Pain Points Section */
+        .pain-section {
+            padding: 6rem 2rem;
+            background: var(--dark);
+            color: var(--white);
+        }
+
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            font-size: 1.125rem;
+            color: var(--gray-400);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .pain-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .pain-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .pain-card:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-5px);
+        }
+
+        .pain-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .pain-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .pain-card p {
+            color: var(--gray-400);
+            font-size: 0.95rem;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 6rem 2rem;
+            background: var(--white);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3rem;
+        }
+
+        .feature-card {
+            display: flex;
+            gap: 1.5rem;
+            padding: 2rem;
+            border-radius: 16px;
+            background: var(--gray-100);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            background: var(--white);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .feature-content h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-content p {
+            color: var(--gray-600);
+            font-size: 0.95rem;
+        }
+
+        /* Compliance Section */
+        .compliance-section {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+        }
+
+        .compliance-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .compliance-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .compliance-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .compliance-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .compliance-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .compliance-card p {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        /* Pricing Section */
+        .pricing-section {
+            padding: 6rem 2rem;
+            background: var(--white);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: var(--white);
+            border: 2px solid var(--gray-200);
+            border-radius: 24px;
+            padding: 2.5rem;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .pricing-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.15);
+        }
+
+        .pricing-card.popular {
+            border-color: var(--primary);
+            transform: scale(1.05);
+            box-shadow: 0 30px 60px rgba(37, 99, 235, 0.2);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .pricing-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-price {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .pricing-price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--gray-400);
+        }
+
+        .pricing-description {
+            font-size: 0.875rem;
+            color: var(--gray-400);
+            margin-top: 0.5rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            font-size: 0.95rem;
+            color: var(--gray-600);
+        }
+
+        .pricing-features li::before {
+            content: "✓";
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        .pricing-card .btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Testimonials Section */
+        .testimonials-section {
+            padding: 6rem 2rem;
+            background: var(--gray-100);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .testimonial-rating {
+            color: var(--accent);
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .testimonial-text {
+            font-size: 1rem;
+            color: var(--gray-600);
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .testimonial-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .testimonial-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .testimonial-info p {
+            font-size: 0.875rem;
+            color: var(--gray-400);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn-white {
+            background: var(--white);
+            color: var(--primary);
+        }
+
+        .btn-white:hover {
+            background: var(--gray-100);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-white {
+            background: transparent;
+            color: var(--white);
+            border: 2px solid var(--white);
+        }
+
+        .btn-outline-white:hover {
+            background: var(--white);
+            color: var(--primary);
+        }
+
+        /* Waitlist Form */
+        .waitlist-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 2rem auto 0;
+        }
+
+        .waitlist-form input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .waitlist-form input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 4rem 2rem 2rem;
+            background: var(--dark);
+            color: var(--gray-400);
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .footer-brand .logo {
+            margin-bottom: 1rem;
+        }
+
+        .footer-brand p {
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .footer-column h4 {
+            color: var(--white);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-column a {
+            color: var(--gray-400);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-column a:hover {
+            color: var(--white);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 3rem auto 0;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .hero-badges {
+                justify-content: center;
+            }
+
+            .hero-image {
+                order: -1;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            .pain-grid,
+            .features-grid,
+            .compliance-grid,
+            .pricing-grid,
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.popular {
+                transform: none;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .section-header h2 {
+                font-size: 2rem;
+            }
+
+            .waitlist-form {
+                flex-direction: column;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+        /* Demo Image Placeholder */
+        .demo-placeholder {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">Genius<span>HR</span></div>
+            <div class="nav-links">
+                <a href="#features">Funzionalita</a>
+                <a href="#compliance">Compliance</a>
+                <a href="#pricing">Prezzi</a>
+                <a href="#testimonials">Recensioni</a>
+                <a href="#" class="btn btn-secondary">Accedi</a>
+                <a href="#cta" class="btn btn-primary">Prova Gratis</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Gestione HR <span class="highlight">semplificata</span> per Studi Odontoiatrici</h1>
+                <p>Il primo software HR specifico per il settore dentale. Compliance automatica CCNL, GDPR, sicurezza. Zero carta, zero stress, zero errori.</p>
+                <div class="hero-buttons">
+                    <a href="#cta" class="btn btn-primary btn-large">Inizia Prova Gratuita</a>
+                    <a href="#demo" class="btn btn-secondary btn-large">Guarda Demo</a>
+                </div>
+                <div class="hero-badges">
+                    <div class="badge">
+                        <span>✓</span> CCNL Studi Professionali
+                    </div>
+                    <div class="badge">
+                        <span>✓</span> GDPR Compliant
+                    </div>
+                    <div class="badge">
+                        <span>✓</span> D.Lgs 81/2008
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="demo-placeholder">
+                    Dashboard GeniusHR
+                </div>
+                <div class="floating-card floating-card-1">
+                    <strong style="color: var(--secondary);">+40%</strong>
+                    <div style="font-size: 0.875rem; color: var(--gray-600);">Tempo risparmiato</div>
+                </div>
+                <div class="floating-card floating-card-2">
+                    <strong style="color: var(--primary);">100%</strong>
+                    <div style="font-size: 0.875rem; color: var(--gray-600);">Compliance garantita</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pain Points Section -->
+    <section class="pain-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Ti riconosci in questi problemi?</h2>
+                <p>La gestione HR negli studi dentistici e un incubo di burocrazia e scadenze</p>
+            </div>
+            <div class="pain-grid">
+                <div class="pain-card">
+                    <div class="pain-icon">📋</div>
+                    <h3>Documenti ovunque</h3>
+                    <p>Contratti in un cassetto, formazione in Excel, scadenze su post-it. Impossibile trovare quello che serve quando serve.</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">⏰</div>
+                    <h3>Scadenze dimenticate</h3>
+                    <p>Visite mediche scadute, formazione non aggiornata, DPI da rinnovare. Scopri i problemi solo quando arriva l'ispezione.</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">⚖️</div>
+                    <h3>CCNL incomprensibile</h3>
+                    <p>Ferie, permessi, malattia, scatti di anzianita. Il contratto collettivo e complesso e gli errori costano caro.</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">🔒</div>
+                    <h3>GDPR? Un mistero</h3>
+                    <p>Informative, consensi, retention dei dati. Non sai se sei a norma e vivi nel terrore delle sanzioni.</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">👥</div>
+                    <h3>Dipendenti confusi</h3>
+                    <p>Ogni domanda arriva a te. Buste paga, ferie residue, documenti. Sei diventato l'help desk dello studio.</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">💸</div>
+                    <h3>Consulenti costosi</h3>
+                    <p>Paghi il commercialista per cose che potresti gestire tu, se solo avessi gli strumenti giusti.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Tutto quello che ti serve, in un unico posto</h2>
+                <p>Progettato da chi conosce le esigenze specifiche degli studi odontoiatrici</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📁</div>
+                    <div class="feature-content">
+                        <h3>Portale Dipendenti</h3>
+                        <p>Ogni dipendente accede ai propri documenti, cedolini, ferie residue. Zero domande a te, autonomia totale.</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⏰</div>
+                    <div class="feature-content">
+                        <h3>Tracking Scadenze Automatico</h3>
+                        <p>Formazione, visite mediche, DPI, fine periodo di prova. Notifiche automatiche 30-60-90 giorni prima.</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-content">
+                        <h3>Valutazione Performance</h3>
+                        <p>Schede di valutazione strutturate, criteri oggettivi, storico nel tempo. Gestisci i colloqui in modo professionale.</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <div class="feature-content">
+                        <h3>Onboarding Digitale</h3>
+                        <p>Checklist automatiche per ogni nuova assunzione. Mai piu dimenticare un documento o una formazione obbligatoria.</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <div class="feature-content">
+                        <h3>Gestione Disciplinare</h3>
+                        <p>Template per contestazioni, richiami, sanzioni. Procedure corrette e documentazione inattaccabile.</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-content">
+                        <h3>Privacy GDPR Integrata</h3>
+                        <p>Informative, consensi, registro trattamenti, retention automatica. Tutto quello che serve per essere a norma.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compliance Section -->
+    <section id="compliance" class="compliance-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Compliance garantita al 100%</h2>
+                <p>Aggiornato in tempo reale con tutte le normative del settore</p>
+            </div>
+            <div class="compliance-grid">
+                <div class="compliance-card">
+                    <div class="compliance-icon">📜</div>
+                    <h3>CCNL Studi Professionali</h3>
+                    <p>Confprofessioni. Livelli, retribuzioni, ferie, permessi, scatti automatici.</p>
+                </div>
+                <div class="compliance-card">
+                    <div class="compliance-icon">🛡️</div>
+                    <h3>D.Lgs 81/2008</h3>
+                    <p>Sicurezza sul lavoro. Formazione, visite mediche, DPI, DVR.</p>
+                </div>
+                <div class="compliance-card">
+                    <div class="compliance-icon">🔐</div>
+                    <h3>GDPR</h3>
+                    <p>Protezione dati. Informative, consensi, retention, diritti interessati.</p>
+                </div>
+                <div class="compliance-card">
+                    <div class="compliance-icon">📋</div>
+                    <h3>Accordo Stato-Regioni</h3>
+                    <p>Formazione PRIMA dell'inizio attivita. ATECO 86.23.00 = Rischio Alto.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Prezzi chiari, senza sorprese</h2>
+                <p>Scegli il piano adatto alle dimensioni del tuo studio</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <div class="pricing-name">Starter</div>
+                        <div class="pricing-price">€29<span>/mese</span></div>
+                        <div class="pricing-description">Fino a 5 dipendenti</div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>Portale dipendenti</li>
+                        <li>Gestione documenti</li>
+                        <li>Tracking scadenze base</li>
+                        <li>Template CCNL inclusi</li>
+                        <li>Supporto email</li>
+                    </ul>
+                    <a href="#cta" class="btn btn-secondary">Inizia Prova Gratuita</a>
+                </div>
+                <div class="pricing-card popular">
+                    <div class="popular-badge">Piu Popolare</div>
+                    <div class="pricing-header">
+                        <div class="pricing-name">Professional</div>
+                        <div class="pricing-price">€59<span>/mese</span></div>
+                        <div class="pricing-description">Fino a 15 dipendenti</div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>Tutto di Starter +</li>
+                        <li>Valutazione performance</li>
+                        <li>Onboarding automatico</li>
+                        <li>Gestione disciplinare</li>
+                        <li>Privacy GDPR completa</li>
+                        <li>Notifiche automatiche</li>
+                        <li>Supporto prioritario</li>
+                    </ul>
+                    <a href="#cta" class="btn btn-primary">Inizia Prova Gratuita</a>
+                </div>
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <div class="pricing-name">Enterprise</div>
+                        <div class="pricing-price">€99<span>/mese</span></div>
+                        <div class="pricing-description">Dipendenti illimitati</div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>Tutto di Professional +</li>
+                        <li>Multi-sede</li>
+                        <li>API integrations</li>
+                        <li>Report personalizzati</li>
+                        <li>Account manager dedicato</li>
+                        <li>Formazione inclusa</li>
+                        <li>SLA garantito</li>
+                    </ul>
+                    <a href="#cta" class="btn btn-secondary">Contattaci</a>
+                </div>
+            </div>
+            <p style="text-align: center; margin-top: 2rem; color: var(--gray-400);">Tutti i prezzi sono IVA esclusa. Prova gratuita 14 giorni, nessuna carta richiesta.</p>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Cosa dicono i nostri clienti</h2>
+                <p>Studi odontoiatrici che hanno trasformato la loro gestione HR</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">★★★★★</div>
+                    <p class="testimonial-text">"Finalmente un software che capisce le nostre esigenze. Prima passavo ore a cercare documenti e gestire scadenze. Ora e tutto automatico."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">MR</div>
+                        <div class="testimonial-info">
+                            <h4>Dr. Marco Rossi</h4>
+                            <p>Studio Dentistico Rossi, Milano</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">★★★★★</div>
+                    <p class="testimonial-text">"Il portale dipendenti ha cambiato tutto. Le mie ASO ora trovano i documenti da sole senza chiedermi nulla. Ho recuperato tempo prezioso."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">LB</div>
+                        <div class="testimonial-info">
+                            <h4>Dr.ssa Laura Bianchi</h4>
+                            <p>Centro Odontoiatrico Bianchi, Roma</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">★★★★★</div>
+                    <p class="testimonial-text">"Le notifiche automatiche per le scadenze mi hanno salvato da una multa sicura. La formazione di un'ASO stava per scadere e non me ne ero accorto."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">GV</div>
+                        <div class="testimonial-info">
+                            <h4>Dr. Giuseppe Verdi</h4>
+                            <p>Dental Clinic Verdi, Napoli</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- White-label Section -->
+    <section style="padding: 6rem 2rem; background: var(--dark); color: var(--white);">
+        <div class="section-container">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;">
+                <div>
+                    <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">Sei un Consulente del Lavoro?</h2>
+                    <p style="font-size: 1.25rem; opacity: 0.9; margin-bottom: 2rem;">Offri ai tuoi clienti un portale HR brandizzato con il tuo logo. Nuova fonte di ricavi ricorrenti senza sviluppare nulla.</p>
+                    <ul style="list-style: none; margin-bottom: 2rem;">
+                        <li style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; font-size: 1.1rem;">
+                            <span style="color: var(--secondary);">✓</span> White-label completo (tuo logo, tuoi colori)
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; font-size: 1.1rem;">
+                            <span style="color: var(--secondary);">✓</span> Margine garantito su ogni cliente
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; font-size: 1.1rem;">
+                            <span style="color: var(--secondary);">✓</span> Dashboard per gestire tutti i tuoi clienti
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; font-size: 1.1rem;">
+                            <span style="color: var(--secondary);">✓</span> Formazione e supporto dedicato
+                        </li>
+                    </ul>
+                    <a href="#" class="btn btn-white btn-large">Scopri il Programma Partner</a>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 3rem; text-align: center;">
+                    <div style="font-size: 4rem; font-weight: 800; color: var(--secondary); margin-bottom: 0.5rem;">€199</div>
+                    <div style="font-size: 1.25rem; opacity: 0.7; margin-bottom: 1.5rem;">/mese per partner</div>
+                    <div style="font-size: 1rem; opacity: 0.6;">Include fino a 10 clienti. €15/mese per ogni cliente aggiuntivo.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="cta" class="cta-section">
+        <div class="section-container">
+            <h2>Pronto a semplificare la gestione HR?</h2>
+            <p>Inizia la prova gratuita di 14 giorni. Nessuna carta di credito richiesta. Disdici quando vuoi.</p>
+            <form class="waitlist-form" id="waitlist-form">
+                <input type="email" placeholder="La tua email di lavoro" required>
+                <button type="submit" class="btn btn-white btn-large">Inizia Gratis</button>
+            </form>
+            <p style="margin-top: 1.5rem; font-size: 0.875rem; opacity: 0.7;">Gia 127 studi in lista d'attesa</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="logo">Genius<span>HR</span></div>
+                <p>Il primo software HR specifico per studi odontoiatrici. Compliance automatica, gestione semplificata, dipendenti autonomi.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Prodotto</h4>
+                <ul>
+                    <li><a href="#features">Funzionalita</a></li>
+                    <li><a href="#pricing">Prezzi</a></li>
+                    <li><a href="#">Integrazioni</a></li>
+                    <li><a href="#">Roadmap</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Risorse</h4>
+                <ul>
+                    <li><a href="#">Centro Assistenza</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Guide CCNL</a></li>
+                    <li><a href="#">Webinar</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Azienda</h4>
+                <ul>
+                    <li><a href="#">Chi siamo</a></li>
+                    <li><a href="#">Contatti</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Termini di Servizio</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 GeniusHR. Tutti i diritti riservati. P.IVA 12345678901</p>
+            <p>Made with ❤️ in Italy</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Waitlist form handling
+        document.getElementById('waitlist-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = this.querySelector('input[type="email"]').value;
+
+            // Here you would normally send this to your backend
+            // For now, we'll just show a success message
+            alert('Grazie! Ti abbiamo aggiunto alla lista d\'attesa. Ti contatteremo presto a ' + email);
+            this.reset();
+        });
+
+        // Navbar background on scroll
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
+            } else {
+                navbar.style.boxShadow = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
