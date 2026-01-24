@@ -109,6 +109,22 @@ model Tenant {
   gdprConsents     GdprConsent[]
   auditLogs        AuditLog[]
 
+  // Sicurezza lavoro D.Lgs. 81/2008
+  safetyTrainings  SafetyTraining[]
+  dvrAcknowledgments DvrAcknowledgment[]
+
+  // Procedura disciplinare Art. 7 L. 300/1970
+  disciplinaryProcedures DisciplinaryProcedure[]
+  disciplinaryCode       DisciplinaryCode?
+
+  // Whistleblowing D.Lgs. 24/2023
+  whistleblowingReports WhistleblowingReport[]
+
+  // Onboarding timeline
+  onboardingTimelines OnboardingTimeline[]
+  dataChangeRequests  EmployeeDataChangeRequest[]
+  probationOutcomes   ProbationOutcome[]
+
   // White-label parent (for consultants)
   parentTenantId   String?
   parentTenant     Tenant?  @relation("TenantHierarchy", fields: [parentTenantId], references: [id])
@@ -189,6 +205,18 @@ model Employee {
   performanceReviews PerformanceReview[]
   onboardingItems OnboardingItem[]
   gdprConsents    GdprConsent[]
+
+  // Sicurezza lavoro D.Lgs. 81/2008
+  safetyTrainings SafetyTraining[]
+  dvrAcknowledgments DvrAcknowledgment[]
+
+  // Procedura disciplinare
+  disciplinaryProcedures DisciplinaryProcedure[]
+
+  // Onboarding timeline
+  onboardingTimelines OnboardingTimeline[]
+  dataChangeRequests  EmployeeDataChangeRequest[]
+  probationOutcome    ProbationOutcome?
 
   @@index([tenantId])
 }
@@ -558,4 +586,548 @@ model CookieConsent {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// SICUREZZA SUL LAVORO (D.Lgs. 81/2008)
+// ============================================
+
+// Formazione sicurezza sul lavoro
+model SafetyTraining {
+  id          String   @id @default(cuid())
+  tenantId    String
+  employeeId  String
+
+  trainingType SafetyTrainingType
+  title        String
+  description  String?
+
+  // Ore formazione (D.Lgs. 81/2008: 4h generale + 4h/8h/12h/16h specifica)
+  hoursCompleted Int      @default(0)
+  hoursRequired  Int
+
+  provider     String?           // Ente formatore
+  instructor   String?           // Nome formatore
+  location     String?           // Luogo formazione
+
+  startedAt    DateTime?
+  completedAt  DateTime?
+  expiresAt    DateTime?         // Scadenza attestato (solitamente 5 anni)
+
+  // Attestato
+  certificateNumber String?
+  certificatePath   String?      // Path documento attestato
+
+  status       SafetyTrainingStatus @default(NOT_STARTED)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([expiresAt])
+}
+
+enum SafetyTrainingType {
+  GENERAL           // Formazione generale (4 ore)
+  SPECIFIC_LOW      // Rischio basso (4 ore) - Uffici, commercio
+  SPECIFIC_MEDIUM   // Rischio medio (8 ore) - Agricoltura, pesca
+  SPECIFIC_HIGH     // Rischio alto (12 ore) - Costruzioni, sanità
+  FIRST_AID         // Primo soccorso
+  FIRE_PREVENTION   // Antincendio
+  RLS               // Rappresentante Lavoratori Sicurezza (32 ore)
+  PREPOSTO          // Preposto (8 ore aggiuntive)
+  DIRIGENTE         // Dirigente (16 ore)
+  UPDATE            // Aggiornamento periodico
+}
+
+enum SafetyTrainingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}
+
+// DVR - Documento Valutazione Rischi
+model DvrAcknowledgment {
+  id          String   @id @default(cuid())
+  tenantId    String
+  employeeId  String
+
+  dvrVersion  String            // Versione DVR (es. "1.0 - Gennaio 2025")
+  dvrDate     DateTime          // Data documento DVR
+
+  acknowledgedAt DateTime?      // Quando il dipendente ha preso visione
+  acknowledgedBy String?        // User ID di chi ha registrato la presa visione
+  signature      String?        // Path file firma se cartacea
+
+  notes       String?           // Note aggiuntive
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, dvrVersion])
+  @@index([tenantId])
+}
+
+// ============================================
+// PROCEDURA DISCIPLINARE (Art. 7 L. 300/1970)
+// ============================================
+
+model DisciplinaryProcedure {
+  id          String   @id @default(cuid())
+  tenantId    String
+  employeeId  String
+
+  // Tipo infrazione
+  infractionType    DisciplinaryInfractionType
+  infractionDate    DateTime
+  infractionDescription String @db.Text
+
+  // Fase 1: Contestazione (Art. 7 comma 2)
+  contestationDate  DateTime?
+  contestationText  String?   @db.Text
+  contestationDeliveryMethod String?  // "raccomandata", "consegna_mano", "pec"
+  contestationDeliveredAt DateTime?
+
+  // Fase 2: Termine difesa (5 giorni Art. 7 comma 5)
+  defenseDeadline   DateTime?         // contestationDeliveredAt + 5 giorni
+  defenseReceivedAt DateTime?
+  defenseText       String?   @db.Text
+  defenseRequestedHearing Boolean @default(false)
+  hearingDate       DateTime?
+  hearingNotes      String?   @db.Text
+
+  // Fase 3: Provvedimento
+  decisionDate      DateTime?
+  sanctionType      DisciplinarySanctionType?
+  sanctionDetails   String?   @db.Text
+  sanctionDeliveredAt DateTime?
+
+  // Impugnazione
+  appealedAt        DateTime?
+  appealOutcome     String?
+
+  status      DisciplinaryStatus @default(DRAFT)
+  createdBy   String             // User ID
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  documents   DisciplinaryDocument[]
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([status])
+}
+
+enum DisciplinaryInfractionType {
+  TARDINESS           // Ritardo
+  ABSENCE             // Assenza ingiustificata
+  INSUBORDINATION     // Insubordinazione
+  NEGLIGENCE          // Negligenza
+  MISCONDUCT          // Comportamento scorretto
+  POLICY_VIOLATION    // Violazione regolamento
+  SAFETY_VIOLATION    // Violazione norme sicurezza
+  HARASSMENT          // Molestie
+  THEFT               // Furto
+  FRAUD               // Frode
+  OTHER               // Altro
+}
+
+enum DisciplinarySanctionType {
+  VERBAL_WARNING      // Rimprovero verbale
+  WRITTEN_WARNING     // Ammonizione scritta
+  FINE                // Multa (max 4 ore retribuzione)
+  SUSPENSION          // Sospensione (max 10 giorni)
+  DISMISSAL_NOTICE    // Licenziamento con preavviso
+  DISMISSAL_IMMEDIATE // Licenziamento per giusta causa
+  NO_SANCTION         // Archiviazione senza sanzione
+}
+
+enum DisciplinaryStatus {
+  DRAFT               // Bozza
+  CONTESTATION_SENT   // Contestazione inviata
+  AWAITING_DEFENSE    // In attesa difese
+  DEFENSE_RECEIVED    // Difese ricevute
+  HEARING_SCHEDULED   // Audizione programmata
+  PENDING_DECISION    // In attesa decisione
+  SANCTION_ISSUED     // Provvedimento emesso
+  APPEALED            // Impugnato
+  CLOSED              // Chiuso
+}
+
+// Documenti procedura disciplinare
+model DisciplinaryDocument {
+  id            String   @id @default(cuid())
+  procedureId   String
+
+  type          DisciplinaryDocType
+  title         String
+  filePath      String?
+  content       String?  @db.Text  // Per documenti generati
+
+  createdAt     DateTime @default(now())
+
+  procedure     DisciplinaryProcedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+}
+
+enum DisciplinaryDocType {
+  CONTESTATION_LETTER   // Lettera contestazione
+  DEFENSE_LETTER        // Lettera difese dipendente
+  HEARING_MINUTES       // Verbale audizione
+  SANCTION_LETTER       // Lettera provvedimento
+  APPEAL                // Impugnazione
+  OTHER                 // Altro documento
+}
+
+// Codice Disciplinare (affissione Art. 7 comma 1)
+model DisciplinaryCode {
+  id          String   @id @default(cuid())
+  tenantId    String   @unique  // Un solo codice per tenant
+
+  version     String            // Versione documento
+  content     String   @db.Text // Contenuto codice disciplinare
+
+  // Affissione (obbligatoria Art. 7 L. 300/1970)
+  postedAt    DateTime?         // Data affissione
+  postedBy    String?           // Chi ha affisso
+  postedLocation String?        // Dove è stato affisso (es. "Bacheca ingresso")
+
+  // Evidenza affissione
+  photoPath   String?           // Foto bacheca con codice affisso
+
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// WHISTLEBLOWING (D.Lgs. 24/2023)
+// ============================================
+
+model WhistleblowingReport {
+  id          String   @id @default(cuid())
+  tenantId    String
+
+  // Dati segnalazione (anonima o nominativa)
+  reporterType WhistleblowerType
+  reporterName String?           // Solo se non anonimo
+  reporterEmail String?
+  reporterPhone String?
+  reporterRole String?           // Ruolo in azienda
+
+  // Segnalazione
+  reportDate   DateTime @default(now())
+  category     WhistleblowingCategory
+  title        String
+  description  String   @db.Text
+  personsInvolved String? @db.Text  // Persone coinvolte
+  evidence     String?  @db.Text    // Prove/documenti
+
+  // Gestione
+  assignedTo   String?           // User ID responsabile
+  status       WhistleblowingStatus @default(RECEIVED)
+
+  // Timeline
+  acknowledgedAt DateTime?       // Conferma ricezione (entro 7 giorni)
+  investigationStartedAt DateTime?
+  investigationCompletedAt DateTime?
+  closedAt     DateTime?
+
+  // Esito
+  outcome      String?  @db.Text
+  actionsTaken String?  @db.Text
+
+  // Tracking comunicazioni (obbligo feedback entro 3 mesi)
+  lastFeedbackAt DateTime?
+
+  // Sicurezza
+  accessCode   String   @unique  // Codice per accesso anonimo
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages     WhistleblowingMessage[]
+  documents    WhistleblowingDocument[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([accessCode])
+}
+
+enum WhistleblowerType {
+  ANONYMOUS
+  CONFIDENTIAL  // Nome noto solo al gestore
+  IDENTIFIED    // Nome visibile
+}
+
+enum WhistleblowingCategory {
+  FRAUD                  // Frode
+  CORRUPTION             // Corruzione
+  SAFETY_VIOLATION       // Violazioni sicurezza
+  ENVIRONMENTAL          // Violazioni ambientali
+  DISCRIMINATION         // Discriminazione
+  HARASSMENT             // Molestie
+  DATA_BREACH            // Violazione dati
+  CONFLICT_OF_INTEREST   // Conflitto interessi
+  FINANCIAL_IRREGULARITY // Irregolarità finanziarie
+  OTHER                  // Altro
+}
+
+enum WhistleblowingStatus {
+  RECEIVED              // Ricevuta
+  ACKNOWLEDGED          // Confermata ricezione
+  UNDER_INVESTIGATION   // In indagine
+  ADDITIONAL_INFO_REQUESTED // Richieste info aggiuntive
+  SUBSTANTIATED         // Fondata
+  UNSUBSTANTIATED       // Non fondata
+  CLOSED                // Chiusa
+}
+
+// Messaggi whistleblowing (comunicazione anonima)
+model WhistleblowingMessage {
+  id          String   @id @default(cuid())
+  reportId    String
+
+  senderType  String   // "reporter" o "manager"
+  content     String   @db.Text
+
+  createdAt   DateTime @default(now())
+
+  report      WhistleblowingReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+// Documenti allegati whistleblowing
+model WhistleblowingDocument {
+  id          String   @id @default(cuid())
+  reportId    String
+
+  fileName    String
+  filePath    String
+  fileSize    Int?
+  mimeType    String?
+  uploadedBy  String   // "reporter" o user ID
+
+  createdAt   DateTime @default(now())
+
+  report      WhistleblowingReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// ONBOARDING TIMELINE (Fasi Procedurali)
+// ============================================
+
+model OnboardingTimeline {
+  id          String   @id @default(cuid())
+  tenantId    String
+  employeeId  String
+
+  // Fase procedurale
+  phase       OnboardingPhase
+  title       String
+  description String?
+
+  // Tempistiche
+  dueDate     DateTime?         // Scadenza prevista
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  // Responsabile
+  assignedTo  String?           // User ID responsabile
+  completedBy String?           // User ID chi ha completato
+
+  // Documenti correlati
+  documentId  String?           // Riferimento a Document se applicabile
+
+  // Note
+  notes       String?
+
+  status      OnboardingPhaseStatus @default(PENDING)
+  order       Int               // Ordine nella timeline
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([status])
+}
+
+enum OnboardingPhase {
+  // Pre-assunzione
+  OFFER_LETTER              // Lettera d'offerta
+  DOCUMENTS_COLLECTION      // Raccolta documenti
+  BACKGROUND_CHECK          // Verifica referenze
+
+  // Giorno 1
+  WELCOME                   // Accoglienza
+  WORKSPACE_SETUP           // Postazione lavoro
+  IT_ACCOUNTS               // Account IT
+  BADGE_ACCESS              // Badge e accessi
+
+  // Prima settimana
+  COMPANY_ORIENTATION       // Orientamento aziendale
+  TEAM_INTRODUCTION         // Presentazione team
+  TOOLS_TRAINING            // Formazione strumenti
+
+  // Sicurezza (D.Lgs. 81/2008)
+  SAFETY_TRAINING_GENERAL   // Formazione generale 4h
+  SAFETY_TRAINING_SPECIFIC  // Formazione specifica
+  DPI_DELIVERY              // Consegna DPI
+  DVR_ACKNOWLEDGMENT        // Presa visione DVR
+  EMERGENCY_PROCEDURES      // Procedure emergenza
+
+  // Compliance
+  PRIVACY_CONSENT           // Consenso privacy
+  CONTRACT_SIGNING          // Firma contratto
+  DISCIPLINARY_CODE         // Presa visione codice disciplinare
+  CCNL_INFORMATION          // Informativa CCNL
+
+  // Periodo prova
+  PROBATION_REVIEW_30       // Review 30 giorni
+  PROBATION_REVIEW_60       // Review 60 giorni
+  PROBATION_FINAL           // Esito periodo prova
+
+  // Variazioni
+  DATA_CHANGE_REQUEST       // Richiesta variazione dati
+}
+
+enum OnboardingPhaseStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+  BLOCKED
+}
+
+// Richieste variazione dati dipendente
+model EmployeeDataChangeRequest {
+  id          String   @id @default(cuid())
+  tenantId    String
+  employeeId  String
+
+  // Tipo variazione
+  changeType  DataChangeType
+
+  // Dati variazione
+  fieldName   String            // Campo da modificare
+  oldValue    String?
+  newValue    String
+  reason      String?           // Motivazione
+
+  // Documenti giustificativi
+  documentPath String?          // Es. nuovo documento identità
+
+  // Workflow approvazione
+  requestedAt DateTime @default(now())
+  requestedBy String            // User ID richiedente
+
+  reviewedAt  DateTime?
+  reviewedBy  String?           // User ID approvatore
+  reviewNotes String?
+
+  status      DataChangeStatus @default(PENDING)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([status])
+}
+
+enum DataChangeType {
+  PERSONAL_INFO      // Dati anagrafici
+  CONTACT_INFO       // Recapiti
+  BANK_INFO          // Dati bancari
+  TAX_INFO           // Dati fiscali
+  EMERGENCY_CONTACT  // Contatto emergenza
+  ADDRESS            // Indirizzo
+}
+
+enum DataChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// Esito periodo di prova
+model ProbationOutcome {
+  id          String   @id @default(cuid())
+  tenantId    String
+  employeeId  String
+
+  // Date periodo prova
+  probationStartDate DateTime
+  probationEndDate   DateTime
+
+  // Valutazione
+  evaluationDate DateTime
+  evaluatedBy    String           // User ID valutatore
+
+  // Criteri valutazione
+  technicalSkills    Int?         // 1-5
+  adaptability       Int?         // 1-5
+  teamwork           Int?         // 1-5
+  punctuality        Int?         // 1-5
+  initiative         Int?         // 1-5
+  overallScore       Float?
+
+  // Note valutazione
+  strengths          String? @db.Text
+  areasForImprovement String? @db.Text
+  evaluatorNotes     String? @db.Text
+
+  // Esito
+  outcome     ProbationResult
+  outcomeDate DateTime?
+  outcomeNotes String? @db.Text
+
+  // Se licenziamento
+  terminationDate DateTime?
+  terminationReason String?
+
+  // Comunicazione
+  notifiedAt  DateTime?
+  notificationMethod String?     // "colloquio", "lettera", "email"
+
+  // Firma dipendente
+  employeeSignedAt DateTime?
+  signaturePath    String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId])
+  @@index([tenantId])
+}
+
+enum ProbationResult {
+  CONFIRMED           // Confermato in ruolo
+  EXTENDED            // Periodo prova prolungato
+  TERMINATED          // Licenziamento durante prova
+  RESIGNED            // Dimissioni durante prova
 }
