@@ -56,14 +56,34 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  phone         String?   // Per OTP SMS
   role          UserRole  @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  // Direct tenant relation for owners/admins
+  tenantId      String?
+  tenant        Tenant?   @relation("TenantOwner", fields: [tenantId], references: [id])
 
   accounts         Account[]
   sessions         Session[]
   tenantMembers    TenantMember[]
   legalAcceptances LegalAcceptance[]
+
+  // Relazioni nuove funzionalità
+  consultantClients    ConsultantClient[] @relation("ConsultantClients")
+  consultantInvitesSent ConsultantInvite[] @relation("ConsultantInviter")
+  employeeNotes        EmployeeNote[]     @relation("NoteAuthor")
+  payslipsUploaded     Payslip[]          @relation("PayslipUploader")
+  signatureRequests    DocumentSignatureRequest[] @relation("SignatureRequester")
+  timeEntriesApproved  TimeEntry[]        @relation("TimeEntryApprover")
+  leaveReviewed        LeaveRequest[]     @relation("LeaveReviewer")
+  expenseReviewed      ExpenseRequest[]   @relation("ExpenseReviewer")
+  otpCodes             OtpCode[]
+  totpSecret           TotpSecret?
+  employeeInvitesSent  EmployeeInvite[]   @relation("EmployeeInviter")
+  notifications        Notification[]
+  employee             Employee?          @relation("UserEmployee")  // Profilo dipendente collegato
 }
 
 enum UserRole {
@@ -101,6 +121,7 @@ model Tenant {
   updatedAt        DateTime @updatedAt
 
   members          TenantMember[]
+  owners           User[]           @relation("TenantOwner")
   employees        Employee[]
   documents        Document[]
   deadlines        Deadline[]
@@ -130,6 +151,21 @@ model Tenant {
   parentTenantId   String?
   parentTenant     Tenant?  @relation("TenantHierarchy", fields: [parentTenantId], references: [id])
   childTenants     Tenant[] @relation("TenantHierarchy")
+
+  // Nuove relazioni
+  consultants           ConsultantClient[]    @relation("TenantConsultants")
+  consultantInvites     ConsultantInvite[]
+  employeeNotes         EmployeeNote[]
+  payslips              Payslip[]
+  signatureRequests     DocumentSignatureRequest[]
+  signatureAuditLogs    SignatureAuditLog[]
+  timeEntries           TimeEntry[]
+  workLocations         WorkLocation[]
+  leaveRequests         LeaveRequest[]
+  leaveBalances         LeaveBalance[]
+  expenseRequests       ExpenseRequest[]
+  employeeInvites       EmployeeInvite[]
+  notifications         Notification[]
 }
 
 enum Plan {
@@ -220,7 +256,22 @@ model Employee {
   dataChangeRequests  EmployeeDataChangeRequest[]
   probationOutcome    ProbationOutcome?
 
+  // Nuove relazioni
+  notes               EmployeeNote[]
+  payslips            Payslip[]
+  signatureRequests   DocumentSignatureRequest[]
+  timeEntries         TimeEntry[]
+  leaveRequests       LeaveRequest[]
+  leaveBalances       LeaveBalance[]
+  expenseRequests     ExpenseRequest[]
+  invites             EmployeeInvite[]
+
+  // Link a User account (se il dipendente ha accesso al sistema)
+  userId              String?   @unique
+  user                User?     @relation("UserEmployee", fields: [userId], references: [id])
+
   @@index([tenantId])
+  @@index([userId])
 }
 
 enum ContractType {
@@ -265,6 +316,7 @@ model Document {
 
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   employee     Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  signatureRequests DocumentSignatureRequest[]
 
   @@index([tenantId])
   @@index([employeeId])
@@ -1152,4 +1204,728 @@ enum ProbationResult {
   EXTENDED            // Periodo prova prolungato
   TERMINATED          // Licenziamento durante prova
   RESIGNED            // Dimissioni durante prova
+}
+
+// ============================================
+// CONSULENTE DEL LAVORO (Multi-Tenant Access)
+// ============================================
+
+// Collegamento Consulente-Aziende
+model ConsultantClient {
+  id           String   @id @default(cuid())
+  consultantId String   // User ID del consulente
+  tenantId     String   // Azienda cliente
+  addedAt      DateTime @default(now())
+  addedBy      String?  // Chi ha aggiunto il collegamento
+  isActive     Boolean  @default(true)
+  permissions  Json?    // Permessi specifici se necessari
+
+  consultant   User     @relation("ConsultantClients", fields: [consultantId], references: [id], onDelete: Cascade)
+  tenant       Tenant   @relation("TenantConsultants", fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([consultantId, tenantId])
+  @@index([consultantId])
+  @@index([tenantId])
+}
+
+// Inviti consulente
+model ConsultantInvite {
+  id           String   @id @default(cuid())
+  tenantId     String
+  email        String
+  invitedBy    String
+  token        String   @unique
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  createdAt    DateTime @default(now())
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inviter      User     @relation("ConsultantInviter", fields: [invitedBy], references: [id])
+
+  @@index([tenantId])
+  @@index([email])
+  @@index([token])
+}
+
+// ============================================
+// FASCICOLO DIPENDENTE
+// ============================================
+
+// Appunti privati del gestore sul dipendente
+model EmployeeNote {
+  id         String   @id @default(cuid())
+  employeeId String
+  authorId   String
+  tenantId   String
+  content    String   @db.Text
+  category   NoteCategory @default(GENERAL)
+  isPrivate  Boolean  @default(true) // Solo visibile a OWNER/MANAGER
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  author     User     @relation("NoteAuthor", fields: [authorId], references: [id])
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([tenantId])
+}
+
+enum NoteCategory {
+  GENERAL
+  PERFORMANCE
+  BEHAVIOR
+  MEETING
+  WARNING
+  POSITIVE
+  FEEDBACK
+}
+
+// Buste Paga
+model Payslip {
+  id           String   @id @default(cuid())
+  employeeId   String
+  tenantId     String
+  period       String   // "2026-01" formato YYYY-MM
+  grossAmount  Decimal? @db.Decimal(10, 2)
+  netAmount    Decimal? @db.Decimal(10, 2)
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  uploadedBy   String
+  uploadedAt   DateTime @default(now())
+  viewedAt     DateTime? // Quando il dipendente l'ha vista
+  viewedIp     String?
+  downloadedAt DateTime?
+
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  uploader     User     @relation("PayslipUploader", fields: [uploadedBy], references: [id])
+
+  @@unique([employeeId, period])
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([period])
+}
+
+// ============================================
+// SISTEMA FIRMA DOCUMENTI INCONTESTABILE
+// ============================================
+
+// Richiesta firma documento
+model DocumentSignatureRequest {
+  id              String   @id @default(cuid())
+  tenantId        String
+  documentId      String   // Riferimento al documento
+  employeeId      String
+  requestedBy     String
+  requestedAt     DateTime @default(now())
+  dueDate         DateTime?
+  reminderSent    Boolean  @default(false)
+  reminderSentAt  DateTime?
+  status          SignatureStatus @default(PENDING)
+  priority        SignaturePriority @default(NORMAL)
+
+  // Configurazione firma
+  requirePassword Boolean @default(true)
+  requireOtp      Boolean @default(true)
+  requirePhrase   Boolean @default(true)
+  minReadingTime  Int     @default(30) // Secondi minimi di lettura
+
+  // Campi firma (compilati quando firma)
+  signedAt        DateTime?
+  signatureData   Json?    // Dati firma completi
+
+  // Certificato generato
+  certificateId   String?
+  certificateUrl  String?
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  document        Document @relation(fields: [documentId], references: [id])
+  employee        Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  requester       User     @relation("SignatureRequester", fields: [requestedBy], references: [id])
+  auditLogs       SignatureAuditLog[]
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([documentId])
+}
+
+enum SignatureStatus {
+  PENDING
+  VIEWED
+  IN_PROGRESS
+  SIGNED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+enum SignaturePriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// Audit Trail Firma (prova legale incontestabile)
+model SignatureAuditLog {
+  id                  String   @id @default(cuid())
+  signatureRequestId  String
+  tenantId            String
+  employeeId          String
+  action              SignatureAction
+  timestamp           DateTime @default(now())
+
+  // Dati forensi
+  ipAddress           String
+  userAgent           String
+  deviceFingerprint   String?
+  geoLocation         Json?    // {city, region, country, lat, lng}
+
+  // Per azione password
+  passwordVerified    Boolean?
+
+  // Per azione OTP
+  otpMethod           String?  // "email" | "totp" | "sms"
+  otpVerified         Boolean?
+  otpAttempts         Int?
+
+  // Per azione frase conferma
+  confirmationPhrase  String?  // Frase digitata dall'utente
+  expectedPhrase      String?  // Frase attesa
+
+  // Per documento
+  documentHash        String?  // SHA-256 del documento
+
+  // Scroll tracking
+  scrollPercentage    Int?     // 0-100
+  timeOnDocument      Int?     // Secondi
+  pagesViewed         Int?
+  totalPages          Int?
+
+  // Metadati aggiuntivi
+  metadata            Json?
+
+  signatureRequest    DocumentSignatureRequest @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+  tenant              Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([signatureRequestId])
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([action])
+  @@index([timestamp])
+}
+
+enum SignatureAction {
+  DOCUMENT_OPENED
+  PAGE_VIEWED
+  SCROLLED
+  TIME_TRACKED
+  PASSWORD_ENTERED
+  PASSWORD_FAILED
+  OTP_REQUESTED
+  OTP_VERIFIED
+  OTP_FAILED
+  PHRASE_TYPED
+  PHRASE_VERIFIED
+  PHRASE_FAILED
+  SIGNED
+  REJECTED
+  CERTIFICATE_GENERATED
+  CERTIFICATE_DOWNLOADED
+}
+
+// ============================================
+// PRESENZE E TIMBRATURA
+// ============================================
+
+// Timbrature presenze
+model TimeEntry {
+  id           String    @id @default(cuid())
+  employeeId   String
+  tenantId     String
+  date         DateTime  @db.Date
+  clockIn      DateTime?
+  clockOut     DateTime?
+
+  // Geolocalizzazione entrata
+  clockInLat   Decimal?  @db.Decimal(10, 8)
+  clockInLng   Decimal?  @db.Decimal(11, 8)
+  clockInAddress String?
+  clockInAccuracy Float? // Accuratezza GPS in metri
+
+  // Geolocalizzazione uscita
+  clockOutLat  Decimal?  @db.Decimal(10, 8)
+  clockOutLng  Decimal?  @db.Decimal(11, 8)
+  clockOutAddress String?
+  clockOutAccuracy Float?
+
+  // Metadati dispositivo
+  clockInIp    String?
+  clockOutIp   String?
+  clockInDevice String?
+  clockOutDevice String?
+  clockInUserAgent String?
+  clockOutUserAgent String?
+
+  // Calcoli automatici
+  workedMinutes Int?
+  breakMinutes  Int?     @default(0)
+  overtimeMinutes Int?   @default(0)
+
+  // Status e approvazione
+  status       TimeEntryStatus @default(PENDING)
+  anomalyType  TimeAnomalyType?
+  notes        String?
+  managerNotes String?
+  approvedBy   String?
+  approvedAt   DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  approver     User?    @relation("TimeEntryApprover", fields: [approvedBy], references: [id])
+
+  @@unique([employeeId, date])
+  @@index([tenantId])
+  @@index([date])
+  @@index([status])
+}
+
+enum TimeEntryStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ANOMALY
+  AUTO_APPROVED
+}
+
+enum TimeAnomalyType {
+  MISSING_CLOCK_IN
+  MISSING_CLOCK_OUT
+  OUT_OF_ZONE
+  UNUSUAL_HOURS
+  OVERTIME_NOT_APPROVED
+  DUPLICATE_ENTRY
+}
+
+// Configurazione sede per geofencing
+model WorkLocation {
+  id           String   @id @default(cuid())
+  tenantId     String
+  name         String   // "Sede principale", "Filiale Milano"
+  address      String
+  latitude     Decimal  @db.Decimal(10, 8)
+  longitude    Decimal  @db.Decimal(11, 8)
+  radiusMeters Int      @default(100) // Raggio consentito per timbratura
+  isDefault    Boolean  @default(false)
+  isActive     Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+// ============================================
+// FERIE E PERMESSI
+// ============================================
+
+// Richieste ferie e permessi
+model LeaveRequest {
+  id           String   @id @default(cuid())
+  employeeId   String
+  tenantId     String
+  type         LeaveType
+  startDate    DateTime @db.Date
+  endDate      DateTime @db.Date
+  startHalf    Boolean  @default(false) // Mezza giornata inizio (pomeriggio)
+  endHalf      Boolean  @default(false) // Mezza giornata fine (mattina)
+  totalDays    Decimal  @db.Decimal(4, 1)
+  totalHours   Decimal? @db.Decimal(5, 1) // Per permessi orari
+  reason       String?
+  attachmentUrl String? // Es. certificato medico
+
+  status       LeaveStatus @default(PENDING)
+  requestedAt  DateTime @default(now())
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  reviewNotes  String?
+
+  // Notifiche
+  reminderSent Boolean @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reviewer     User?    @relation("LeaveReviewer", fields: [reviewedBy], references: [id])
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([startDate])
+}
+
+enum LeaveType {
+  VACATION        // Ferie
+  SICK            // Malattia
+  PERSONAL        // Permesso personale
+  ROL             // Riduzione Orario Lavoro
+  EX_FESTIVITY    // Ex festività
+  PARENTAL        // Congedo parentale
+  MATERNITY       // Maternità
+  PATERNITY       // Paternità
+  BEREAVEMENT     // Lutto
+  MARRIAGE        // Matrimonio
+  STUDY           // Studio/esami (150 ore)
+  BLOOD_DONATION  // Donazione sangue
+  UNION           // Permesso sindacale
+  MEDICAL_VISIT   // Visita medica
+  LAW_104         // Legge 104
+  UNPAID          // Non retribuito
+  OTHER           // Altro
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  IN_PROGRESS  // Ferie in corso
+  COMPLETED    // Ferie terminate
+}
+
+// Saldo ferie/permessi per anno
+model LeaveBalance {
+  id           String   @id @default(cuid())
+  employeeId   String
+  tenantId     String
+  year         Int
+
+  // Ferie
+  vacationTotal       Decimal @db.Decimal(5, 2) @default(0)
+  vacationUsed        Decimal @db.Decimal(5, 2) @default(0)
+  vacationPending     Decimal @db.Decimal(5, 2) @default(0) // Richieste in attesa
+  vacationCarryOver   Decimal @db.Decimal(5, 2) @default(0) // Da anno precedente
+  vacationExpireDate  DateTime? // Scadenza riporto
+
+  // Permessi ROL
+  rolTotal            Decimal @db.Decimal(5, 2) @default(0)
+  rolUsed             Decimal @db.Decimal(5, 2) @default(0)
+  rolPending          Decimal @db.Decimal(5, 2) @default(0)
+
+  // Ex festività
+  exFestTotal         Decimal @db.Decimal(5, 2) @default(0)
+  exFestUsed          Decimal @db.Decimal(5, 2) @default(0)
+  exFestPending       Decimal @db.Decimal(5, 2) @default(0)
+
+  // Malattia (tracking, non saldo)
+  sickDaysUsed        Int     @default(0)
+
+  // Legge 104
+  law104Total         Decimal @db.Decimal(5, 2) @default(0)
+  law104Used          Decimal @db.Decimal(5, 2) @default(0)
+
+  notes        String?
+  updatedAt    DateTime @updatedAt
+  lastCalculatedAt DateTime?
+
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, year])
+  @@index([tenantId])
+  @@index([year])
+}
+
+// ============================================
+// SPESE E TRASFERTE
+// ============================================
+
+// Richieste rimborso spese
+model ExpenseRequest {
+  id           String   @id @default(cuid())
+  employeeId   String
+  tenantId     String
+  type         ExpenseType
+  date         DateTime @db.Date
+  description  String
+  amount       Decimal  @db.Decimal(10, 2)
+  currency     String   @default("EUR")
+
+  // Per rimborsi chilometrici
+  kilometers   Decimal? @db.Decimal(8, 2)
+  ratePerKm    Decimal? @db.Decimal(4, 3) // Tariffa applicata
+  origin       String?
+  destination  String?
+  vehicleType  VehicleType?
+  vehiclePlate String?  // Targa veicolo
+
+  // Per trasferte
+  tripPurpose  String?  // Motivo trasferta
+  clientName   String?  // Cliente visitato
+
+  // Allegati
+  receipts     ExpenseReceipt[]
+
+  status       ExpenseStatus @default(PENDING)
+  requestedAt  DateTime @default(now())
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  reviewNotes  String?
+  paidAt       DateTime?
+  paymentRef   String?  // Riferimento pagamento
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reviewer     User?    @relation("ExpenseReviewer", fields: [reviewedBy], references: [id])
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([date])
+}
+
+enum ExpenseType {
+  MILEAGE         // Rimborso km
+  TRAVEL          // Viaggio (treno, aereo, etc.)
+  ACCOMMODATION   // Alloggio
+  MEALS           // Pasti
+  TRANSPORT       // Taxi, mezzi pubblici
+  PARKING         // Parcheggio
+  TOLL            // Pedaggio autostradale
+  FUEL            // Carburante (se auto aziendale)
+  PHONE           // Telefono
+  SUPPLIES        // Materiali/forniture
+  TRAINING        // Formazione
+  CLIENT_GIFT     // Omaggi clienti
+  REPRESENTATION  // Spese rappresentanza
+  OTHER           // Altro
+}
+
+enum ExpenseStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+  CANCELLED
+}
+
+enum VehicleType {
+  CAR_PETROL      // Auto benzina
+  CAR_DIESEL      // Auto diesel
+  CAR_HYBRID      // Auto ibrida
+  CAR_ELECTRIC    // Auto elettrica
+  CAR_LPG         // Auto GPL
+  CAR_METHANE     // Auto metano
+  MOTORCYCLE      // Moto
+  SCOOTER         // Scooter
+  BICYCLE         // Bici (per alcuni CCNL)
+}
+
+// Allegati spese (scontrini, ricevute)
+model ExpenseReceipt {
+  id           String   @id @default(cuid())
+  expenseId    String
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  uploadedAt   DateTime @default(now())
+
+  expense      ExpenseRequest @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@index([expenseId])
+}
+
+// Tariffe ACI per rimborsi km
+model MileageRate {
+  id           String   @id @default(cuid())
+  vehicleType  VehicleType
+  year         Int
+  ratePerKm    Decimal  @db.Decimal(4, 3)
+  source       String?  // "Tabelle ACI 2026"
+  fuelType     String?
+  engineCc     String?  // Cilindrata (es. "fino a 1200cc")
+  validFrom    DateTime
+  validTo      DateTime?
+  isActive     Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+
+  @@unique([vehicleType, year, engineCc])
+  @@index([year])
+  @@index([vehicleType])
+}
+
+// ============================================
+// SISTEMA OTP
+// ============================================
+
+// Codici OTP per verifica
+model OtpCode {
+  id           String   @id @default(cuid())
+  userId       String
+  code         String
+  type         OtpType
+  purpose      String   // "document_signature", "login", "password_reset"
+  referenceId  String?  // ID del documento/richiesta
+  expiresAt    DateTime
+  usedAt       DateTime?
+  attempts     Int      @default(0)
+  maxAttempts  Int      @default(3)
+  lastAttemptAt DateTime?
+
+  // Metadata
+  ipAddress    String?
+  userAgent    String?
+
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([code])
+  @@index([purpose, referenceId])
+}
+
+enum OtpType {
+  EMAIL
+  SMS
+  TOTP
+}
+
+// TOTP secrets per Google Authenticator
+model TotpSecret {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  secret       String   // Encrypted
+  isVerified   Boolean  @default(false)
+  verifiedAt   DateTime?
+  backupCodes  Json?    // Array di codici backup criptati
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// INVITI
+// ============================================
+
+// Inviti dipendenti
+model EmployeeInvite {
+  id           String   @id @default(cuid())
+  tenantId     String
+  email        String
+  role         TenantRole @default(EMPLOYEE)
+  employeeId   String?  // Se collegato a un Employee esistente
+  invitedBy    String
+  token        String   @unique
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+
+  // Dati pre-compilati
+  firstName    String?
+  lastName     String?
+  department   String?
+  jobTitle     String?
+
+  createdAt    DateTime @default(now())
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inviter      User     @relation("EmployeeInviter", fields: [invitedBy], references: [id])
+  employee     Employee? @relation(fields: [employeeId], references: [id])
+
+  @@index([tenantId])
+  @@index([email])
+  @@index([token])
+}
+
+// ============================================
+// NOTIFICHE
+// ============================================
+
+model Notification {
+  id           String   @id @default(cuid())
+  userId       String
+  tenantId     String?
+
+  type         NotificationType
+  title        String
+  message      String
+  link         String?  // Link per azione
+
+  // Riferimenti
+  entityType   String?  // "LeaveRequest", "ExpenseRequest", etc.
+  entityId     String?
+
+  isRead       Boolean  @default(false)
+  readAt       DateTime?
+
+  // Email notification
+  emailSent    Boolean  @default(false)
+  emailSentAt  DateTime?
+
+  // Push notification
+  pushSent     Boolean  @default(false)
+  pushSentAt   DateTime?
+
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  // Documenti
+  DOCUMENT_TO_SIGN
+  DOCUMENT_SIGNED
+  DOCUMENT_REJECTED
+  DOCUMENT_REMINDER
+
+  // Ferie
+  LEAVE_REQUESTED
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  LEAVE_REMINDER
+
+  // Spese
+  EXPENSE_REQUESTED
+  EXPENSE_APPROVED
+  EXPENSE_REJECTED
+  EXPENSE_PAID
+
+  // Presenze
+  ATTENDANCE_ANOMALY
+  ATTENDANCE_REMINDER
+
+  // Buste paga
+  PAYSLIP_AVAILABLE
+
+  // Scadenze
+  DEADLINE_REMINDER
+  DEADLINE_OVERDUE
+
+  // Sistema
+  SYSTEM_ALERT
+  WELCOME
 }
