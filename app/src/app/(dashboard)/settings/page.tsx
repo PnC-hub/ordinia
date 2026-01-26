@@ -5,28 +5,16 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 export default async function SettingsPage() {
-  let session
-  try {
-    session = await getServerSession(authOptions)
-  } catch (e) {
-    console.error('Settings: Error getting session:', e)
-    redirect('/login')
-  }
+  const session = await getServerSession(authOptions)
 
   if (!session) {
     redirect('/login')
   }
 
-  let membership
-  try {
-    membership = await prisma.tenantMember.findFirst({
-      where: { userId: session.user.id },
-      include: { tenant: true }
-    })
-  } catch (e) {
-    console.error('Settings: Error getting membership:', e)
-    redirect('/onboarding')
-  }
+  const membership = await prisma.tenantMember.findFirst({
+    where: { userId: session.user.id },
+    include: { tenant: true }
+  })
 
   if (!membership) {
     redirect('/onboarding')
@@ -34,6 +22,9 @@ export default async function SettingsPage() {
 
   const tenant = membership.tenant
   const isAdmin = ['OWNER', 'ADMIN'].includes(membership.role)
+
+  // Serialize the date to avoid hydration issues
+  const trialEndsAt = tenant.trialEndsAt ? new Date(tenant.trialEndsAt).toLocaleDateString('it-IT') : null
 
   const settingsGroups = [
     {
@@ -120,9 +111,9 @@ export default async function SettingsPage() {
           <div>
             <p className="text-blue-100 text-sm">Piano attuale</p>
             <p className="text-2xl font-bold">{tenant.plan}</p>
-            {tenant.subscriptionStatus === 'TRIAL' && tenant.trialEndsAt && (
+            {tenant.subscriptionStatus === 'TRIAL' && trialEndsAt && (
               <p className="text-blue-200 text-sm mt-1">
-                Prova gratuita fino al {new Date(tenant.trialEndsAt).toLocaleDateString('it-IT')}
+                Prova gratuita fino al {trialEndsAt}
               </p>
             )}
           </div>
@@ -175,7 +166,7 @@ export default async function SettingsPage() {
                         </div>
                         <p className="text-sm text-gray-500 mt-1">{item.description}</p>
                       </div>
-                      <span className="text-gray-400">→</span>
+                      <span className="text-gray-400">&rarr;</span>
                     </div>
                   </Link>
                 )
