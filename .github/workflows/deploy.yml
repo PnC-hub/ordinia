@@ -17,10 +17,27 @@ jobs:
           host: 93.186.255.213
           username: geniusfast
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 20m
           script: |
             cd /var/www/geniushr
             git pull origin main
             cd app
-            npm install --production
+
+            # Clean old build artifacts with permission issues
+            rm -rf .next
+
+            # Install dependencies
+            npm install
+
+            # Build the app
             npm run build
-            pm2 restart geniushr
+
+            # Restart or start PM2 process
+            pm2 describe geniushr > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+              pm2 restart geniushr
+            else
+              pm2 start npm --name "geniushr" -- start
+            fi
+
+            pm2 save
