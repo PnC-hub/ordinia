@@ -23,8 +23,14 @@ jobs:
             git pull origin main
             cd app
 
-            # Clean old build artifacts with permission issues
-            rm -rf .next
+            # Stop PM2 first to release file locks
+            pm2 stop geniushr 2>/dev/null || true
+
+            # Clean old build artifacts - use sudo if needed for permission issues
+            sudo rm -rf .next || rm -rf .next
+
+            # Ensure correct ownership
+            sudo chown -R geniusfast:geniusfast . 2>/dev/null || true
 
             # Install dependencies
             npm install
@@ -32,7 +38,7 @@ jobs:
             # Build the app
             npm run build
 
-            # Restart or start PM2 process
+            # Restart PM2 process
             pm2 describe geniushr > /dev/null 2>&1
             if [ $? -eq 0 ]; then
               pm2 restart geniushr
