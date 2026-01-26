@@ -98,8 +98,8 @@ export default async function SettingsPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Impostazioni</h1>
-        <p className="text-gray-600 mt-1">Gestisci il tuo account e le preferenze</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Impostazioni</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">Gestisci il tuo account e le preferenze</p>
       </div>
 
       {/* Current Plan Banner */}
@@ -129,7 +129,7 @@ export default async function SettingsPage() {
       <div className="space-y-8">
         {settingsGroups.map((group) => (
           <div key={group.title}>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">{group.title}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{group.title}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {group.items.map((item) => {
                 const disabled = ('adminOnly' in item && item.adminOnly) && !isAdmin
@@ -139,18 +139,17 @@ export default async function SettingsPage() {
                   <Link
                     key={item.href}
                     href={disabled || isPremium ? '#' : item.href}
-                    className={`block bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all ${
+                    className={`block bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-700 p-6 transition-all ${
                       disabled || isPremium
-                        ? 'opacity-50 cursor-not-allowed'
+                        ? 'opacity-50 cursor-not-allowed pointer-events-none'
                         : 'hover:shadow-md hover:border-blue-300'
                     }`}
-                    onClick={(e) => (disabled || isPremium) && e.preventDefault()}
                   >
                     <div className="flex items-start gap-4">
                       <div className="text-2xl">{item.icon}</div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-gray-900">{item.label}</h3>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">{item.label}</h3>
                           {'adminOnly' in item && item.adminOnly && (
                             <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                               Admin
