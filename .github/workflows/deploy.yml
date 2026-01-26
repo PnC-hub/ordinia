@@ -23,10 +23,10 @@ jobs:
             git pull origin main
             cd app
 
-            # Stop PM2 first to release file locks
-            pm2 stop geniushr 2>/dev/null || true
+            # Stop and delete PM2 process completely
+            pm2 delete geniushr 2>/dev/null || true
 
-            # Clean old build artifacts - use sudo if needed for permission issues
+            # Clean old build artifacts
             sudo rm -rf .next || rm -rf .next
 
             # Ensure correct ownership
@@ -38,12 +38,7 @@ jobs:
             # Build the app
             npm run build
 
-            # Restart PM2 process
-            pm2 describe geniushr > /dev/null 2>&1
-            if [ $? -eq 0 ]; then
-              pm2 restart geniushr
-            else
-              pm2 start npm --name "geniushr" -- start
-            fi
+            # Start fresh PM2 process with explicit port
+            PORT=3000 pm2 start npm --name "geniushr" -- start
 
             pm2 save
