@@ -52,22 +52,18 @@ jobs:
             # Wait for server to start
             sleep 10
 
-            # Check what's listening on 443
-            echo "=== Services on port 443 ==="
-            sudo netstat -tlnp | grep 443 || echo "Nothing on 443"
+            # Show nginx config for geniushr
+            echo "=== Nginx geniushr.conf ==="
+            cat /etc/nginx/conf.d/geniushr.conf 2>/dev/null || echo "No nginx geniushr config"
 
-            # Check nginx configs
-            echo "=== Nginx configs ==="
-            ls -la /etc/nginx/sites-enabled/ 2>/dev/null || echo "No nginx sites-enabled"
-            ls -la /etc/nginx/conf.d/ 2>/dev/null || echo "No nginx conf.d"
+            # Show Apache SSL config
+            echo "=== Apache SSL sites ==="
+            ls -la /etc/apache2/sites-enabled/ | grep -i ssl || echo "No SSL sites"
+            grep -r "geniushr" /etc/apache2/sites-available/*ssl* 2>/dev/null || echo "No SSL config for geniushr in Apache"
 
-            # Check if nginx is running
-            echo "=== Nginx status ==="
-            systemctl status nginx 2>/dev/null | head -5 || echo "nginx not managed by systemctl"
-
-            # Check Plesk nginx
-            echo "=== Plesk nginx ==="
-            ls /etc/sw-cp-server/conf.d/ 2>/dev/null || echo "No Plesk nginx"
+            # Check if Apache default SSL is handling geniushr
+            echo "=== Apache default-ssl config ==="
+            cat /etc/apache2/sites-available/default-ssl.conf 2>/dev/null | head -30 || echo "No default-ssl"
 
             # Test local route
             echo "=== Testing localhost:3000/signatures ==="
