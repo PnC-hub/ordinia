@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface Payslip {
   id: string
@@ -178,13 +179,24 @@ export default function PayslipsManagementPage() {
   return (
     <div className="p-6 lg:p-8">
       <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Buste Paga
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Carica e gestisci le buste paga dei dipendenti
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Buste Paga
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Carica e gestisci le buste paga dei dipendenti
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Gestione Cedolini"
+            description="Carica i cedolini mensili e distribuiscili automaticamente ai dipendenti. Il sistema traccia le visualizzazioni e mantiene uno storico completo accessibile sia a te che ai collaboratori."
+            tips={[
+              'Usa nomenclatura standard (CF_MMAAAA.pdf) per upload automatico',
+              'Invia notifica dopo il caricamento per avvisare il dipendente',
+              'Conserva i cedolini per almeno 5 anni come richiesto dalla legge'
+            ]}
+          />
         </div>
         <button
           onClick={() => setShowUploadModal(true)}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface Integration {
   id: string
@@ -197,13 +198,24 @@ export default function IntegrationsSettingsPage() {
 
   return (
     <div className="p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Integrazioni
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Connetti GeniusHR con i tuoi strumenti preferiti
-        </p>
+      <div className="mb-8 flex items-center gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Integrazioni
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Connetti GeniusHR con i tuoi strumenti preferiti
+          </p>
+        </div>
+        <PageInfoTooltip
+          title="Integrazioni Esterne"
+          description="Collega GeniusHR ai software che già utilizzi per automatizzare lo scambio di dati. Le integrazioni permettono di sincronizzare anagrafiche, presenze e cedolini."
+          tips={[
+            'L\'integrazione con Zucchetti e TeamSystem sincronizza i dati paghe',
+            'Google e Microsoft 365 permettono SSO e calendario condiviso',
+            'Le notifiche WhatsApp richiedono l\'account Business API'
+          ]}
+        />
       </div>
 
       {/* Stats */}

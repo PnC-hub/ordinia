@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface OnboardingTimeline {
   id: string
@@ -103,13 +104,24 @@ export default function OnboardingPage() {
   return (
     <div className="p-8">
       <div className="mb-8 flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Onboarding Timeline
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Gestione fasi procedurali di inserimento nuovi dipendenti
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Onboarding Timeline
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Gestione fasi procedurali di inserimento nuovi dipendenti
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Processo di Onboarding"
+            description="Monitora tutte le fasi di inserimento dei nuovi assunti: documenti da firmare, formazione, consegna materiali. Il sistema traccia lo stato di avanzamento per ogni dipendente."
+            tips={[
+              'Completa tutte le fasi entro i primi 30 giorni',
+              'Le fasi con scadenza vengono evidenziate in rosso',
+              'Usa la vista per dipendente per monitorare i singoli casi'
+            ]}
+          />
         </div>
         <div className="flex gap-2">
           <button

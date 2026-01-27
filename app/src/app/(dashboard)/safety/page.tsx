@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface SafetyTraining {
   id: string
@@ -87,13 +88,24 @@ export default function SafetyPage() {
   return (
     <div className="p-8">
       <div className="mb-8 flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Sicurezza sul Lavoro
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Gestione formazione D.Lgs. 81/2008 e DVR
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Sicurezza sul Lavoro
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Gestione formazione D.Lgs. 81/2008 e DVR
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Sicurezza D.Lgs 81/08"
+            description="Monitora tutta la formazione obbligatoria sulla sicurezza: generale, specifica, antincendio, primo soccorso. Il sistema ti avvisa delle scadenze e ti aiuta a mantenere la compliance."
+            tips={[
+              'La formazione generale non scade mai',
+              'I corsi specifici hanno rinnovo ogni 5 anni',
+              'Carica sempre l\'attestato come prova documentale'
+            ]}
+          />
         </div>
         <Link
           href="/safety/new"

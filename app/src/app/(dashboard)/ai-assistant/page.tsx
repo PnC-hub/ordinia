@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface Message {
   id: string
@@ -329,12 +330,25 @@ Nel frattempo, ecco alcune risorse utili:
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col">
       <div className="p-6 border-b border-gray-200 dark:border-zinc-700">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Assistente AI HR
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Powered by AI - Supporto per documenti, normative e procedure HR
-        </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Assistente AI HR
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Powered by AI - Supporto per documenti, normative e procedure HR
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Assistente AI"
+            description="Chiedi all'intelligenza artificiale di aiutarti con documenti HR, calcoli, normative CCNL e procedure. Genera lettere, template e ottieni risposte immediate."
+            tips={[
+              'Usa le azioni rapide per le richieste più comuni',
+              'L\'AI può generare template personalizzati per la tua azienda',
+              'Le risposte non sostituiscono la consulenza legale professionale'
+            ]}
+          />
+        </div>
       </div>
 
       {/* Quick Actions */}

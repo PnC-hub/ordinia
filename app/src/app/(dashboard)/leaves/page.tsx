@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface LeaveRequest {
   id: string
@@ -163,13 +164,24 @@ export default function LeavesManagementPage() {
   return (
     <div className="p-6 lg:p-8">
       <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Ferie e Permessi
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Gestisci richieste ferie, permessi e saldi dipendenti
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Ferie e Permessi
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Gestisci richieste ferie, permessi e saldi dipendenti
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Gestione Ferie e Permessi"
+            description="Visualizza e gestisci tutte le richieste di assenza dei tuoi collaboratori. Approva o rifiuta le richieste e monitora i saldi residui."
+            tips={[
+              'Usa il filtro "Da Approvare" per le richieste urgenti',
+              'Controlla i saldi prima di approvare lunghe assenze',
+              'Il sistema calcola automaticamente i giorni lavorativi'
+            ]}
+          />
         </div>
         <div className="flex gap-2">
           <button

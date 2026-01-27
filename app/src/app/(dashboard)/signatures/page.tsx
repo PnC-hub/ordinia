@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface SignatureRequest {
   id: string
@@ -138,13 +139,24 @@ export default function SignaturesManagementPage() {
   return (
     <div className="p-6 lg:p-8">
       <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Gestione Firme
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Invia documenti da firmare e monitora lo stato
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Gestione Firme
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Invia documenti da firmare e monitora lo stato
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Firma Elettronica"
+            description="Invia documenti ai dipendenti per la firma digitale. Traccia lo stato di ogni richiesta e invia solleciti automatici per le firme in scadenza."
+            tips={[
+              'Imposta una scadenza per ricevere solleciti automatici',
+              'La firma elettronica ha validità legale ai sensi del CAD',
+              'Puoi inviare promemoria manuali per le firme urgenti'
+            ]}
+          />
         </div>
         <button
           onClick={() => setShowNewModal(true)}

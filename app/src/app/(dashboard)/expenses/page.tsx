@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface ExpenseRequest {
   id: string
@@ -162,13 +163,24 @@ export default function ExpensesManagementPage() {
   return (
     <div className="p-6 lg:p-8">
       <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Spese e Rimborsi
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Gestisci note spese e richieste di rimborso
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Spese e Rimborsi
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Gestisci note spese e richieste di rimborso
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Gestione Note Spese"
+            description="Visualizza e approva le richieste di rimborso spese dei collaboratori. Ogni richiesta include documentazione allegata e viene tracciata fino al rimborso effettivo."
+            tips={[
+              'Verifica sempre che sia allegata la ricevuta originale',
+              'Controlla i limiti di spesa per categoria',
+              'Segna le spese come rimborsate dopo il pagamento'
+            ]}
+          />
         </div>
       </div>
 

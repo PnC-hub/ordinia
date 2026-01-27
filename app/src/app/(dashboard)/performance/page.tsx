@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface PerformanceReview {
   id: string
@@ -108,13 +109,24 @@ export default function PerformancePage() {
   return (
     <div className="p-8">
       <div className="mb-8 flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Performance
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Valutazioni delle prestazioni dei dipendenti
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Performance
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Valutazioni delle prestazioni dei dipendenti
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Valutazione Prestazioni"
+            description="Esegui valutazioni periodiche delle performance dei dipendenti. Registra feedback, obiettivi e punteggi per avere uno storico delle prestazioni."
+            tips={[
+              'Effettua valutazioni almeno una volta l\'anno',
+              'Usa i commenti per feedback costruttivi',
+              'Confronta le valutazioni nel tempo per vedere l\'evoluzione'
+            ]}
+          />
         </div>
         <Link
           href="/performance/new"

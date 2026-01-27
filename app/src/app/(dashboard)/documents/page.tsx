@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface Document {
   id: string
@@ -100,13 +101,24 @@ export default function DocumentsPage() {
   return (
     <div className="p-8">
       <div className="mb-8 flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Documenti
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Archivio documenti dipendenti e aziendali
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Documenti
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Archivio documenti dipendenti e aziendali
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Archivio Documenti"
+            description="Conserva tutti i documenti HR in un unico archivio sicuro e organizzato. Ogni documento può essere associato a un dipendente e categorizzato per tipologia."
+            tips={[
+              'I documenti con scadenza vengono evidenziati automaticamente',
+              'Usa le categorie per filtrare rapidamente',
+              'I file sono crittografati e conformi al GDPR'
+            ]}
+          />
         </div>
         <Link
           href="/documents/upload"

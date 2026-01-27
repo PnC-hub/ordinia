@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface TrainingCourse {
   id: string
@@ -168,13 +169,24 @@ export default function TrainingPage() {
   return (
     <div className="p-6 lg:p-8">
       <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Formazione
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Gestisci corsi di formazione e certificazioni dipendenti
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Formazione
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Gestisci corsi di formazione e certificazioni dipendenti
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Gestione Formazione"
+            description="Monitora i corsi obbligatori e facoltativi dei tuoi dipendenti. Il sistema ti avvisa automaticamente quando gli attestati stanno per scadere."
+            tips={[
+              'I corsi sicurezza D.Lgs 81/08 hanno scadenze obbligatorie',
+              'Carica sempre l\'attestato come prova documentale',
+              'Usa i report per pianificare sessioni formative di gruppo'
+            ]}
+          />
         </div>
         <div className="flex gap-2">
           <button

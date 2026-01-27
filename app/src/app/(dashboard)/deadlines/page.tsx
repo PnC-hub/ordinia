@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface Deadline {
   id: string
@@ -107,13 +108,24 @@ export default function DeadlinesPage() {
   return (
     <div className="p-8">
       <div className="mb-8 flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Scadenze
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Gestione scadenze formazioni, visite mediche, contratti e documenti
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Scadenze
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Gestione scadenze formazioni, visite mediche, contratti e documenti
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Scadenziario HR"
+            description="Monitora tutte le scadenze importanti: rinnovi formativi, visite mediche, contratti a termine, documenti in scadenza. Ricevi avvisi automatici in anticipo."
+            tips={[
+              'Le scadenze rosse sono già scadute e richiedono azione immediata',
+              'Imposta promemoria a 30, 15 e 7 giorni prima',
+              'Collega le scadenze ai dipendenti per una gestione centralizzata'
+            ]}
+          />
         </div>
         <Link
           href="/deadlines/new"

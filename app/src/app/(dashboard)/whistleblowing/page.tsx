@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface WhistleblowingReport {
   id: string
@@ -98,13 +99,24 @@ export default function WhistleblowingPage() {
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Whistleblowing
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Gestione segnalazioni D.Lgs. 24/2023
-        </p>
+      <div className="mb-8 flex items-center gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Whistleblowing
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Gestione segnalazioni D.Lgs. 24/2023
+          </p>
+        </div>
+        <PageInfoTooltip
+          title="Canale Whistleblowing"
+          description="Gestisci le segnalazioni di illeciti ai sensi del D.Lgs. 24/2023. Le aziende con oltre 50 dipendenti sono obbligate ad avere un canale di segnalazione interno."
+          tips={[
+            'Rispondi entro 7 giorni dalla ricezione della segnalazione',
+            'Garantisci sempre la riservatezza del segnalante',
+            'Documenta tutte le azioni intraprese'
+          ]}
+        />
       </div>
 
       {/* Alert for urgent reports */}

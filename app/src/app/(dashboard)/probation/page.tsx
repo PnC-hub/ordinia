@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface ProbationOutcome {
   id: string
@@ -135,13 +136,24 @@ export default function ProbationPage() {
   return (
     <div className="p-8">
       <div className="mb-8 flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Periodo di Prova
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Valutazione e gestione esiti periodo di prova
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Periodo di Prova
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Valutazione e gestione esiti periodo di prova
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Gestione Periodi di Prova"
+            description="Monitora i dipendenti in periodo di prova e registra l'esito finale. Il sistema ti avvisa quando le scadenze si avvicinano per permetterti di valutare in tempo."
+            tips={[
+              'La durata del periodo di prova dipende dal livello CCNL',
+              'Valuta il dipendente prima della scadenza del periodo',
+              'Documenta sempre le motivazioni dell\'esito'
+            ]}
+          />
         </div>
       </div>
 

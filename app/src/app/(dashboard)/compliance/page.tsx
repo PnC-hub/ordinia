@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface ComplianceStatus {
   score: number
@@ -135,13 +136,24 @@ export default function ComplianceDashboardPage() {
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Dashboard Compliance
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Monitora lo stato di conformità GDPR, sicurezza e normativo del tuo studio
-        </p>
+      <div className="mb-8 flex items-center gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Dashboard Compliance
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Monitora lo stato di conformità GDPR, sicurezza e normativo del tuo studio
+          </p>
+        </div>
+        <PageInfoTooltip
+          title="Stato Compliance"
+          description="Verifica il livello di conformità della tua azienda rispetto a GDPR, sicurezza sul lavoro e normative HR. Il punteggio indica quanti adempimenti hai completato."
+          tips={[
+            'Completa tutti gli elementi per raggiungere il 100%',
+            'Gli elementi rossi richiedono azione immediata',
+            'Consulta l\'audit log per lo storico delle attività'
+          ]}
+        />
       </div>
 
       {/* Score Card */}

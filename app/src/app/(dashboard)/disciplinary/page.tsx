@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface DisciplinaryProcedure {
   id: string
@@ -107,13 +108,24 @@ export default function DisciplinaryPage() {
   return (
     <div className="p-8">
       <div className="mb-8 flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Procedura Disciplinare
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Art. 7 Statuto dei Lavoratori - Gestione contestazioni e sanzioni
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Procedura Disciplinare
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Art. 7 Statuto dei Lavoratori - Gestione contestazioni e sanzioni
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Gestione Disciplinare"
+            description="Avvia e gestisci le procedure disciplinari nel rispetto dell'Art. 7 Statuto dei Lavoratori. Il sistema ti guida nelle fasi corrette: contestazione, giustificazioni, sanzione."
+            tips={[
+              'Rispetta sempre il termine di 5 giorni per le giustificazioni',
+              'Conserva tutta la documentazione a supporto',
+              'La sanzione deve essere proporzionata al fatto contestato'
+            ]}
+          />
         </div>
         <Link
           href="/disciplinary/new"

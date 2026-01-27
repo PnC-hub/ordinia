@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface TeamMember {
   id: string
@@ -153,13 +154,24 @@ export default function TeamSettingsPage() {
   return (
     <div className="p-6 lg:p-8">
       <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Team e Ruoli
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Gestisci i membri del team e i loro permessi
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Team e Ruoli
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Gestisci i membri del team e i loro permessi
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Gestione Team"
+            description="Invita collaboratori e assegna loro ruoli e permessi specifici. Ogni ruolo determina quali sezioni del sistema possono visualizzare e modificare."
+            tips={[
+              'Il ruolo Proprietario non può essere modificato',
+              'Assegna permessi granulari per limitare l\'accesso a dati sensibili',
+              'Puoi invitare il consulente del lavoro con accesso limitato'
+            ]}
+          />
         </div>
         <button
           onClick={() => setShowInviteModal(true)}

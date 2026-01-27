@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PageInfoTooltip from '@/components/PageInfoTooltip'
 
 interface TimeEntry {
   id: string
@@ -138,13 +139,24 @@ export default function AttendanceManagementPage() {
   return (
     <div className="p-6 lg:p-8">
       <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Gestione Presenze
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Monitora e approva le timbrature dei dipendenti
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Gestione Presenze
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Monitora e approva le timbrature dei dipendenti
+            </p>
+          </div>
+          <PageInfoTooltip
+            title="Monitoraggio Presenze"
+            description="Visualizza le timbrature giornaliere di tutti i dipendenti, approva quelle in attesa e gestisci le anomalie. Il sistema calcola automaticamente ore lavorate e straordinari."
+            tips={[
+              'Filtra per data o dipendente per trovare rapidamente le timbrature',
+              'Le anomalie (ritardi, uscite anticipate) sono evidenziate in rosso',
+              'Esporta i dati per l\'elaborazione del cedolino'
+            ]}
+          />
         </div>
         <Link
           href="/attendance/report"
