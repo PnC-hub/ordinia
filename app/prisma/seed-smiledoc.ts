@@ -267,7 +267,7 @@ async function main() {
       dueDate: new Date('2028-03-01'),
       employeeId: 'smiledoc-maria',
       notify30Days: true,
-      notify7Days: true
+      notify60Days: true
     },
     {
       tenantId: smiledocTenant.id,
@@ -276,7 +276,7 @@ async function main() {
       dueDate: new Date('2026-03-01'),
       employeeId: 'smiledoc-maria',
       notify30Days: true,
-      notify7Days: true
+      notify60Days: true
     },
     {
       tenantId: smiledocTenant.id,
@@ -285,7 +285,7 @@ async function main() {
       dueDate: new Date('2025-07-15'),
       employeeId: 'smiledoc-marco',
       notify30Days: true,
-      notify7Days: true
+      notify60Days: true
     },
     {
       tenantId: smiledocTenant.id,
@@ -294,7 +294,7 @@ async function main() {
       dueDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 giorni
       employeeId: 'smiledoc-giulia',
       notify30Days: true,
-      notify7Days: true
+      notify60Days: true
     },
     {
       tenantId: smiledocTenant.id,
@@ -302,7 +302,7 @@ async function main() {
       type: 'CONTRACT_EXPIRY' as const,
       dueDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 giorni
       notify30Days: true,
-      notify7Days: true
+      notify90Days: true
     }
   ]
 
