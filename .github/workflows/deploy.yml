@@ -31,9 +31,10 @@ jobs:
             sudo fuser -k 3000/tcp 2>/dev/null || true
             sleep 2
 
-            # Clean old build artifacts
+            # Clean ALL old build and cache artifacts
             sudo rm -rf .next || rm -rf .next
             rm -rf node_modules/.cache 2>/dev/null || true
+            rm -rf .turbo 2>/dev/null || true
 
             # Ensure correct ownership
             sudo chown -R geniusfast:geniusfast . 2>/dev/null || true
@@ -55,7 +56,19 @@ jobs:
             # Wait for server to start
             sleep 10
 
-            # Test the route
+            # Show Apache config for geniushr
+            echo "=== Apache vhost config ==="
+            cat /etc/apache2/sites-available/*geniushr* 2>/dev/null || echo "No Apache config found"
+
+            # Check if Apache proxies to Node
+            echo "=== Checking proxy ==="
+            grep -r "ProxyPass" /etc/apache2/sites-available/ 2>/dev/null | grep -i genius || echo "No proxy config"
+
+            # Test the routes
             echo "=== Testing localhost:3000/signatures ==="
             curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/signatures
+            echo ""
+
+            echo "=== Testing localhost:3000/dashboard ==="
+            curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/dashboard
             echo ""
