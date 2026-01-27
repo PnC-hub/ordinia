@@ -45,10 +45,6 @@ jobs:
             # Build the app
             npm run build
 
-            # Verify port 3000 is free
-            echo "=== Checking port 3000 ==="
-            sudo netstat -tlnp | grep 3000 || echo "Port 3000 is free"
-
             # Start PM2
             pm2 start npm --name "geniushr" --cwd /var/www/geniushr/app -- start
             pm2 save
@@ -56,19 +52,19 @@ jobs:
             # Wait for server to start
             sleep 10
 
-            # Show Apache config for geniushr
-            echo "=== Apache vhost config ==="
-            cat /etc/apache2/sites-available/*geniushr* 2>/dev/null || echo "No Apache config found"
+            # Check ALL Apache configs with genius
+            echo "=== All Apache configs ==="
+            ls -la /etc/apache2/sites-enabled/ 2>/dev/null
 
-            # Check if Apache proxies to Node
-            echo "=== Checking proxy ==="
-            grep -r "ProxyPass" /etc/apache2/sites-available/ 2>/dev/null | grep -i genius || echo "No proxy config"
+            echo "=== HTTPS config (if exists) ==="
+            cat /etc/apache2/sites-available/*geniushr*ssl* 2>/dev/null || echo "No SSL config found"
+            cat /etc/apache2/sites-enabled/*geniushr*ssl* 2>/dev/null || echo "No enabled SSL config found"
+
+            # Check Plesk panel configs
+            echo "=== Plesk vhost configs ==="
+            ls /var/www/vhosts/*/conf/ 2>/dev/null | head -10 || echo "No Plesk vhost configs"
 
             # Test the routes
             echo "=== Testing localhost:3000/signatures ==="
             curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/signatures
-            echo ""
-
-            echo "=== Testing localhost:3000/dashboard ==="
-            curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/dashboard
             echo ""
