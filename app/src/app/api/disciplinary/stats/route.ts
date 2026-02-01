@@ -11,10 +11,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
     }
 
-    const tenantId = session.user.tenantId
-    if (!tenantId) {
-      return NextResponse.json({ error: 'Tenant non trovato' }, { status: 400 })
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { employee: true },
+    })
+
+    if (!user?.tenantId && !user?.employee?.tenantId) {
+      return NextResponse.json({ error: 'Tenant non trovato' }, { status: 404 })
     }
+
+    const tenantId = (user.tenantId || user.employee?.tenantId) as string
 
     const { searchParams } = new URL(req.url)
     const employeeId = searchParams.get('employeeId')

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import PageInfoTooltip from '@/components/PageInfoTooltip'
+import TutorialLink from '@/components/TutorialLink'
 
 interface LeaveRequest {
   id: string
@@ -423,6 +424,9 @@ export default function LeavesManagementPage() {
           </button>
         </div>
       </div>
+
+      {/* Tutorial Banner */}
+      <TutorialLink tutorialId="leave-planning" variant="banner" className="mb-6" />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

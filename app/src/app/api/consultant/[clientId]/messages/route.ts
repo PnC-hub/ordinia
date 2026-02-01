@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma'
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { clientId: string } }
+  { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -19,11 +19,13 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { clientId } = await params
+
     // Verify consultant has access to this client
     const access = await prisma.consultantClient.findFirst({
       where: {
         consultantId: session.user.id,
-        tenantId: params.clientId,
+        tenantId: clientId,
         isActive: true,
       },
     })
@@ -35,7 +37,7 @@ export async function GET(
     // Get notifications sent by consultant to this tenant
     const messages = await prisma.notification.findMany({
       where: {
-        tenantId: params.clientId,
+        tenantId: clientId,
         // In a real system, you'd have a separate Message model
         // For now, using notifications as proxy
       },
@@ -74,7 +76,7 @@ export async function GET(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { clientId: string } }
+  { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -83,11 +85,13 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { clientId } = await params
+
     // Verify consultant has access to this client
     const access = await prisma.consultantClient.findFirst({
       where: {
         consultantId: session.user.id,
-        tenantId: params.clientId,
+        tenantId: clientId,
         isActive: true,
       },
     })
@@ -109,7 +113,7 @@ export async function POST(
     // Get tenant owners/admins to notify
     const tenantMembers = await prisma.tenantMember.findMany({
       where: {
-        tenantId: params.clientId,
+        tenantId: clientId,
         role: { in: ['OWNER', 'ADMIN', 'HR_MANAGER'] },
       },
       include: {
@@ -122,7 +126,7 @@ export async function POST(
       await prisma.notification.create({
         data: {
           userId: member.userId,
-          tenantId: params.clientId,
+          tenantId: clientId,
           type: type === 'request' ? 'DOCUMENT_TO_SIGN' : 'SYSTEM_ALERT',
           title: subject,
           message: content,
@@ -135,7 +139,7 @@ export async function POST(
     // Log audit
     await prisma.auditLog.create({
       data: {
-        tenantId: params.clientId,
+        tenantId: clientId,
         userId: session.user.id,
         action: 'CREATE',
         entityType: 'Message',

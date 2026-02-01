@@ -56,14 +56,14 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-  phone         String?   // Per OTP SMS
+  phone         String? // Per OTP SMS
   role          UserRole  @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   // Direct tenant relation for owners/admins
-  tenantId      String?
-  tenant        Tenant?   @relation("TenantOwner", fields: [tenantId], references: [id])
+  tenantId String?
+  tenant   Tenant? @relation("TenantOwner", fields: [tenantId], references: [id])
 
   accounts         Account[]
   sessions         Session[]
@@ -71,26 +71,26 @@ model User {
   legalAcceptances LegalAcceptance[]
 
   // Relazioni nuove funzionalità
-  consultantClients    ConsultantClient[] @relation("ConsultantClients")
-  consultantInvitesSent ConsultantInvite[] @relation("ConsultantInviter")
-  employeeNotes        EmployeeNote[]     @relation("NoteAuthor")
-  payslipsUploaded     Payslip[]          @relation("PayslipUploader")
-  signatureRequests    DocumentSignatureRequest[] @relation("SignatureRequester")
-  timeEntriesApproved  TimeEntry[]        @relation("TimeEntryApprover")
-  leaveReviewed        LeaveRequest[]     @relation("LeaveReviewer")
-  expenseReviewed      ExpenseRequest[]   @relation("ExpenseReviewer")
-  otpCodes             OtpCode[]
-  totpSecret           TotpSecret?
-  employeeInvitesSent  EmployeeInvite[]   @relation("EmployeeInviter")
-  notifications        Notification[]
-  employee             Employee?          @relation("UserEmployee")  // Profilo dipendente collegato
+  consultantClients     ConsultantClient[]         @relation("ConsultantClients")
+  consultantInvitesSent ConsultantInvite[]         @relation("ConsultantInviter")
+  employeeNotes         EmployeeNote[]             @relation("NoteAuthor")
+  payslipsUploaded      Payslip[]                  @relation("PayslipUploader")
+  signatureRequests     DocumentSignatureRequest[] @relation("SignatureRequester")
+  timeEntriesApproved   TimeEntry[]                @relation("TimeEntryApprover")
+  leaveReviewed         LeaveRequest[]             @relation("LeaveReviewer")
+  expenseReviewed       ExpenseRequest[]           @relation("ExpenseReviewer")
+  otpCodes              OtpCode[]
+  totpSecret            TotpSecret?
+  employeeInvitesSent   EmployeeInvite[]           @relation("EmployeeInviter")
+  notifications         Notification[]
+  employee              Employee?                  @relation("UserEmployee") // Profilo dipendente collegato
 }
 
 enum UserRole {
-  SUPER_ADMIN  // Platform owner (you)
-  ADMIN        // Tenant admin (clinic owner)
-  HR_MANAGER   // HR manager
-  USER         // Regular employee
+  SUPER_ADMIN // Platform owner (you)
+  ADMIN // Tenant admin (clinic owner)
+  HR_MANAGER // HR manager
+  USER // Regular employee
 }
 
 // ============================================
@@ -98,45 +98,45 @@ enum UserRole {
 // ============================================
 
 model Tenant {
-  id               String   @id @default(cuid())
-  name             String   // "Studio Dentistico Rossi"
-  slug             String   @unique // "studio-rossi" for subdomain
-  logo             String?
-  primaryColor     String   @default("#2563eb")
-  secondaryColor   String   @default("#10b981")
-  customDomain     String?  @unique // "hr.studiorossi.it"
+  id             String  @id @default(cuid())
+  name           String // "Studio Dentistico Rossi"
+  slug           String  @unique // "studio-rossi" for subdomain
+  logo           String?
+  primaryColor   String  @default("#2563eb")
+  secondaryColor String  @default("#10b981")
+  customDomain   String? @unique // "hr.studiorossi.it"
 
   // Subscription
-  plan             Plan     @default(STARTER)
-  stripeCustomerId String?  @unique
-  subscriptionId   String?
+  plan               Plan               @default(STARTER)
+  stripeCustomerId   String?            @unique
+  subscriptionId     String?
   subscriptionStatus SubscriptionStatus @default(TRIAL)
-  trialEndsAt      DateTime?
+  trialEndsAt        DateTime?
 
   // Settings
-  timezone         String   @default("Europe/Rome")
-  language         String   @default("it")
+  timezone String @default("Europe/Rome")
+  language String @default("it")
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  members          TenantMember[]
-  owners           User[]           @relation("TenantOwner")
-  employees        Employee[]
-  documents        Document[]
-  deadlines        Deadline[]
-  performanceReviews PerformanceReview[]
+  members              TenantMember[]
+  owners               User[]                @relation("TenantOwner")
+  employees            Employee[]
+  documents            Document[]
+  deadlines            Deadline[]
+  performanceReviews   PerformanceReview[]
   onboardingChecklists OnboardingChecklist[]
-  gdprConsents     GdprConsent[]
-  auditLogs        AuditLog[]
+  gdprConsents         GdprConsent[]
+  auditLogs            AuditLog[]
 
   // Sicurezza lavoro D.Lgs. 81/2008
-  safetyTrainings  SafetyTraining[]
+  safetyTrainings    SafetyTraining[]
   dvrAcknowledgments DvrAcknowledgment[]
 
   // Procedura disciplinare Art. 7 L. 300/1970
-  disciplinaryProcedures DisciplinaryProcedure[]
-  disciplinaryCode       DisciplinaryCode?
+  disciplinaryProcedures          DisciplinaryProcedure[]
+  disciplinaryCode                DisciplinaryCode?
   disciplinaryCodeAcknowledgments DisciplinaryCodeAcknowledgment[]
 
   // Whistleblowing D.Lgs. 24/2023
@@ -148,31 +148,36 @@ model Tenant {
   probationOutcomes   ProbationOutcome[]
 
   // White-label parent (for consultants)
-  parentTenantId   String?
-  parentTenant     Tenant?  @relation("TenantHierarchy", fields: [parentTenantId], references: [id])
-  childTenants     Tenant[] @relation("TenantHierarchy")
+  parentTenantId String?
+  parentTenant   Tenant?  @relation("TenantHierarchy", fields: [parentTenantId], references: [id])
+  childTenants   Tenant[] @relation("TenantHierarchy")
 
   // Nuove relazioni
-  consultants           ConsultantClient[]    @relation("TenantConsultants")
-  consultantInvites     ConsultantInvite[]
-  employeeNotes         EmployeeNote[]
-  payslips              Payslip[]
-  signatureRequests     DocumentSignatureRequest[]
-  signatureAuditLogs    SignatureAuditLog[]
-  timeEntries           TimeEntry[]
-  workLocations         WorkLocation[]
-  leaveRequests         LeaveRequest[]
-  leaveBalances         LeaveBalance[]
-  expenseRequests       ExpenseRequest[]
-  employeeInvites       EmployeeInvite[]
-  notifications         Notification[]
+  consultants        ConsultantClient[]         @relation("TenantConsultants")
+  consultantInvites  ConsultantInvite[]
+  employeeNotes      EmployeeNote[]
+  payslips           Payslip[]
+  signatureRequests  DocumentSignatureRequest[]
+  signatureAuditLogs SignatureAuditLog[]
+  timeEntries        TimeEntry[]
+  workLocations      WorkLocation[]
+  leaveRequests      LeaveRequest[]
+  leaveBalances      LeaveBalance[]
+  expenseRequests    ExpenseRequest[]
+  employeeInvites    EmployeeInvite[]
+  notifications      Notification[]
+  tutorialProgress   TutorialProgress[]
+  tutorialAnalytics  TutorialAnalytics[]
+  manualCategories   ManualCategory[]
+  manualArticles     ManualArticle[]
+  manualChecklists   ManualChecklist[]
 }
 
 enum Plan {
-  STARTER      // €29/mo - up to 5 employees
+  STARTER // €29/mo - up to 5 employees
   PROFESSIONAL // €59/mo - up to 15 employees
-  ENTERPRISE   // €99/mo - unlimited
-  PARTNER      // €199/mo - white-label reseller
+  ENTERPRISE // €99/mo - unlimited
+  PARTNER // €199/mo - white-label reseller
 }
 
 enum SubscriptionStatus {
@@ -184,23 +189,23 @@ enum SubscriptionStatus {
 }
 
 model TenantMember {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   userId    String
   tenantId  String
   role      TenantRole @default(EMPLOYEE)
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tenantId])
 }
 
 enum TenantRole {
-  OWNER       // Can manage billing, delete tenant
-  ADMIN       // Can manage employees, settings
-  HR_MANAGER  // Can manage HR functions
-  EMPLOYEE    // Read-only access to own data
+  OWNER // Can manage billing, delete tenant
+  ADMIN // Can manage employees, settings
+  HR_MANAGER // Can manage HR functions
+  EMPLOYEE // Read-only access to own data
 }
 
 // ============================================
@@ -208,47 +213,47 @@ enum TenantRole {
 // ============================================
 
 model Employee {
-  id              String   @id @default(cuid())
-  tenantId        String
+  id       String @id @default(cuid())
+  tenantId String
 
   // Personal Info
-  firstName       String
-  lastName        String
-  fiscalCode      String?
-  email           String?
-  phone           String?
-  address         String?
-  birthDate       DateTime?
-  birthPlace      String?
+  firstName  String
+  lastName   String
+  fiscalCode String?
+  email      String?
+  phone      String?
+  address    String?
+  birthDate  DateTime?
+  birthPlace String?
 
   // Employment Info
-  hireDate        DateTime
-  endDate         DateTime?
-  contractType    ContractType @default(FULL_TIME)
-  ccnlLevel       String?      // "3° Livello", "4° Super", etc.
-  department      String?
-  jobTitle        String?
+  hireDate     DateTime
+  endDate      DateTime?
+  contractType ContractType @default(FULL_TIME)
+  ccnlLevel    String? // "3° Livello", "4° Super", etc.
+  department   String?
+  jobTitle     String?
 
   // Status
   status          EmployeeStatus @default(ACTIVE)
   probationEndsAt DateTime?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  documents       Document[]
-  deadlines       Deadline[]
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  documents          Document[]
+  deadlines          Deadline[]
   performanceReviews PerformanceReview[]
-  onboardingItems OnboardingItem[]
-  gdprConsents    GdprConsent[]
+  onboardingItems    OnboardingItem[]
+  gdprConsents       GdprConsent[]
 
   // Sicurezza lavoro D.Lgs. 81/2008
-  safetyTrainings SafetyTraining[]
+  safetyTrainings    SafetyTraining[]
   dvrAcknowledgments DvrAcknowledgment[]
 
   // Procedura disciplinare
-  disciplinaryProcedures DisciplinaryProcedure[]
+  disciplinaryProcedures          DisciplinaryProcedure[]
   disciplinaryCodeAcknowledgments DisciplinaryCodeAcknowledgment[]
 
   // Onboarding timeline
@@ -257,18 +262,21 @@ model Employee {
   probationOutcome    ProbationOutcome?
 
   // Nuove relazioni
-  notes               EmployeeNote[]
-  payslips            Payslip[]
-  signatureRequests   DocumentSignatureRequest[]
-  timeEntries         TimeEntry[]
-  leaveRequests       LeaveRequest[]
-  leaveBalances       LeaveBalance[]
-  expenseRequests     ExpenseRequest[]
-  invites             EmployeeInvite[]
+  notes             EmployeeNote[]
+  payslips          Payslip[]
+  signatureRequests DocumentSignatureRequest[]
+  timeEntries       TimeEntry[]
+  leaveRequests     LeaveRequest[]
+  leaveBalances     LeaveBalance[]
+  expenseRequests   ExpenseRequest[]
+  invites           EmployeeInvite[]
 
   // Link a User account (se il dipendente ha accesso al sistema)
-  userId              String?   @unique
-  user                User?     @relation("UserEmployee", fields: [userId], references: [id])
+  userId String? @unique
+  user   User?   @relation("UserEmployee", fields: [userId], references: [id])
+
+  // Manuale operativo
+  manualAcknowledgments ManualAcknowledgment[]
 
   @@index([tenantId])
   @@index([userId])
@@ -295,27 +303,27 @@ enum EmployeeStatus {
 // ============================================
 
 model Document {
-  id          String   @id @default(cuid())
-  tenantId    String
-  employeeId  String?
+  id         String  @id @default(cuid())
+  tenantId   String
+  employeeId String?
 
-  name        String
-  type        DocumentType
-  category    String?
-  filePath    String
-  fileSize    Int?
-  mimeType    String?
+  name     String
+  type     DocumentType
+  category String?
+  filePath String
+  fileSize Int?
+  mimeType String?
 
   // GDPR Retention
   retentionYears Int?
-  expiresAt    DateTime?
+  expiresAt      DateTime?
 
-  uploadedBy   String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee     Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  tenant            Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee          Employee?                  @relation(fields: [employeeId], references: [id], onDelete: SetNull)
   signatureRequests DocumentSignatureRequest[]
 
   @@index([tenantId])
@@ -339,9 +347,9 @@ enum DocumentType {
 // ============================================
 
 model Deadline {
-  id          String   @id @default(cuid())
-  tenantId    String
-  employeeId  String?
+  id         String  @id @default(cuid())
+  tenantId   String
+  employeeId String?
 
   title       String
   description String?
@@ -350,19 +358,19 @@ model Deadline {
   status      DeadlineStatus @default(PENDING)
 
   // Notification settings
-  notify30Days Boolean @default(true)
-  notify60Days Boolean @default(false)
-  notify90Days Boolean @default(false)
+  notify30Days Boolean   @default(true)
+  notify60Days Boolean   @default(false)
+  notify90Days Boolean   @default(false)
   notifiedAt   DateTime?
 
-  completedAt  DateTime?
-  completedBy  String?
+  completedAt DateTime?
+  completedBy String?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee     Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
   @@index([dueDate])
@@ -391,33 +399,33 @@ enum DeadlineStatus {
 // ============================================
 
 model PerformanceReview {
-  id          String   @id @default(cuid())
-  tenantId    String
-  employeeId  String
+  id         String @id @default(cuid())
+  tenantId   String
+  employeeId String
 
-  reviewDate  DateTime
-  reviewerId  String?
+  reviewDate DateTime
+  reviewerId String?
 
   // Scores (1-5)
-  technicalSkills    Int?
-  teamwork           Int?
-  communication      Int?
-  reliability        Int?
-  growthPotential    Int?
+  technicalSkills Int?
+  teamwork        Int?
+  communication   Int?
+  reliability     Int?
+  growthPotential Int?
 
-  overallScore       Float?
-  strengths          String? @db.Text
-  improvements       String? @db.Text
-  goals              String? @db.Text
-  notes              String? @db.Text
+  overallScore Float?
+  strengths    String? @db.Text
+  improvements String? @db.Text
+  goals        String? @db.Text
+  notes        String? @db.Text
 
-  status      ReviewStatus @default(DRAFT)
+  status ReviewStatus @default(DRAFT)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([employeeId])
@@ -434,51 +442,51 @@ enum ReviewStatus {
 // ============================================
 
 model OnboardingChecklist {
-  id          String   @id @default(cuid())
-  tenantId    String
+  id       String @id @default(cuid())
+  tenantId String
 
   name        String
   description String?
-  isDefault   Boolean  @default(false)
+  isDefault   Boolean @default(false)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  items       OnboardingChecklistItem[]
+  tenant Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items  OnboardingChecklistItem[]
 
   @@index([tenantId])
 }
 
 model OnboardingChecklistItem {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   checklistId String
 
   title       String
   description String?
-  category    String?  // "Documenti", "Formazione", "IT", etc.
-  order       Int      @default(0)
-  required    Boolean  @default(true)
+  category    String? // "Documenti", "Formazione", "IT", etc.
+  order       Int     @default(0)
+  required    Boolean @default(true)
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   checklist   OnboardingChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
   completions OnboardingItem[]
 }
 
 model OnboardingItem {
-  id            String   @id @default(cuid())
-  employeeId    String
+  id              String @id @default(cuid())
+  employeeId      String
   checklistItemId String
 
-  completed     Boolean  @default(false)
-  completedAt   DateTime?
-  completedBy   String?
-  notes         String?
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  completedBy String?
+  notes       String?
 
-  createdAt     DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee      Employee                @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   checklistItem OnboardingChecklistItem @relation(fields: [checklistItemId], references: [id], onDelete: Cascade)
 
   @@unique([employeeId, checklistItemId])
@@ -489,16 +497,16 @@ model OnboardingItem {
 // ============================================
 
 model Invoice {
-  id              String   @id @default(cuid())
-  stripeInvoiceId String   @unique
+  id              String  @id @default(cuid())
+  stripeInvoiceId String  @unique
   tenantId        String?
 
-  amount          Int      // in cents
-  currency        String   @default("eur")
-  status          String
-  paidAt          DateTime?
+  amount   Int // in cents
+  currency String    @default("eur")
+  status   String
+  paidAt   DateTime?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 // ============================================
@@ -509,15 +517,15 @@ model Invoice {
 model LegalDocument {
   id          String            @id @default(cuid())
   type        LegalDocumentType
-  version     String            // "1.0", "1.1", "2.0"
+  version     String // "1.0", "1.1", "2.0"
   title       String
   content     String            @db.Text
   summary     String?           @db.Text // Riassunto modifiche per nuove versioni
   effectiveAt DateTime
   isActive    Boolean           @default(false)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   acceptances LegalAcceptance[]
 
@@ -534,16 +542,16 @@ enum LegalDocumentType {
 
 // Tracking accettazione documenti legali da parte degli utenti
 model LegalAcceptance {
-  id              String   @id @default(cuid())
+  id              String @id @default(cuid())
   userId          String
   legalDocumentId String
 
-  ipAddress       String?
-  userAgent       String?
-  acceptedAt      DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+  acceptedAt DateTime @default(now())
 
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  legalDocument   LegalDocument @relation(fields: [legalDocumentId], references: [id])
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  legalDocument LegalDocument @relation(fields: [legalDocumentId], references: [id])
 
   @@unique([userId, legalDocumentId])
   @@index([userId])
@@ -551,60 +559,60 @@ model LegalAcceptance {
 
 // Consensi GDPR specifici per dipendenti
 model GdprConsent {
-  id          String          @id @default(cuid())
-  tenantId    String
-  employeeId  String
+  id         String @id @default(cuid())
+  tenantId   String
+  employeeId String
 
   consentType GdprConsentType
   granted     Boolean
-  purpose     String?         // Finalita specifica del consenso
+  purpose     String? // Finalita specifica del consenso
 
-  grantedAt   DateTime?
-  revokedAt   DateTime?
-  expiresAt   DateTime?
+  grantedAt DateTime?
+  revokedAt DateTime?
+  expiresAt DateTime?
 
   // Tracciabilita raccolta consenso
-  collectedBy String?         // User ID di chi ha raccolto il consenso
-  method      String?         // "online", "paper", "verbal"
+  collectedBy String? // User ID di chi ha raccolto il consenso
+  method      String? // "online", "paper", "verbal"
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@unique([employeeId, consentType])
   @@index([tenantId])
 }
 
 enum GdprConsentType {
-  DATA_PROCESSING      // Trattamento dati personali base
-  HEALTH_DATA          // Dati sanitari (art. 9 GDPR)
-  MARKETING            // Comunicazioni marketing
-  THIRD_PARTY_SHARING  // Condivisione con terze parti
-  PHOTO_VIDEO          // Uso immagini/video
+  DATA_PROCESSING // Trattamento dati personali base
+  HEALTH_DATA // Dati sanitari (art. 9 GDPR)
+  MARKETING // Comunicazioni marketing
+  THIRD_PARTY_SHARING // Condivisione con terze parti
+  PHOTO_VIDEO // Uso immagini/video
 }
 
 // Audit Log per tracciare tutte le operazioni (compliance GDPR Art. 32)
 model AuditLog {
-  id          String      @id @default(cuid())
-  tenantId    String
-  userId      String?     // Chi ha eseguito l'azione
+  id       String  @id @default(cuid())
+  tenantId String
+  userId   String? // Chi ha eseguito l'azione
 
-  action      AuditAction
-  entityType  String      // "Employee", "Document", "Consent", etc.
-  entityId    String
+  action     AuditAction
+  entityType String // "Employee", "Document", "Consent", etc.
+  entityId   String
 
-  details     Json?       // Dettagli aggiuntivi
-  oldValue    Json?       // Valore precedente (per update/delete)
-  newValue    Json?       // Nuovo valore (per create/update)
+  details  Json? // Dettagli aggiuntivi
+  oldValue Json? // Valore precedente (per update/delete)
+  newValue Json? // Nuovo valore (per create/update)
 
-  ipAddress   String?
-  userAgent   String?
+  ipAddress String?
+  userAgent String?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, createdAt])
   @@index([entityType, entityId])
@@ -626,20 +634,20 @@ enum AuditAction {
 
 // Cookie Consent per visitatori (GDPR compliant)
 model CookieConsent {
-  id          String   @id @default(cuid())
-  visitorId   String   @unique  // UUID generato client-side
-  userId      String?           // Se utente loggato
+  id        String  @id @default(cuid())
+  visitorId String  @unique // UUID generato client-side
+  userId    String? // Se utente loggato
 
-  necessary   Boolean  @default(true)   // Sempre true, non disabilitabile
-  analytics   Boolean  @default(false)
-  marketing   Boolean  @default(false)
-  preferences Boolean  @default(false)
+  necessary   Boolean @default(true) // Sempre true, non disabilitabile
+  analytics   Boolean @default(false)
+  marketing   Boolean @default(false)
+  preferences Boolean @default(false)
 
-  ipAddress   String?
-  userAgent   String?
+  ipAddress String?
+  userAgent String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================
@@ -648,37 +656,37 @@ model CookieConsent {
 
 // Formazione sicurezza sul lavoro
 model SafetyTraining {
-  id          String   @id @default(cuid())
-  tenantId    String
-  employeeId  String
+  id         String @id @default(cuid())
+  tenantId   String
+  employeeId String
 
   trainingType SafetyTrainingType
   title        String
   description  String?
 
   // Ore formazione (D.Lgs. 81/2008: 4h generale + 4h/8h/12h/16h specifica)
-  hoursCompleted Int      @default(0)
+  hoursCompleted Int @default(0)
   hoursRequired  Int
 
-  provider     String?           // Ente formatore
-  instructor   String?           // Nome formatore
-  location     String?           // Luogo formazione
+  provider   String? // Ente formatore
+  instructor String? // Nome formatore
+  location   String? // Luogo formazione
 
-  startedAt    DateTime?
-  completedAt  DateTime?
-  expiresAt    DateTime?         // Scadenza attestato (solitamente 5 anni)
+  startedAt   DateTime?
+  completedAt DateTime?
+  expiresAt   DateTime? // Scadenza attestato (solitamente 5 anni)
 
   // Attestato
   certificateNumber String?
-  certificatePath   String?      // Path documento attestato
+  certificatePath   String? // Path documento attestato
 
-  status       SafetyTrainingStatus @default(NOT_STARTED)
+  status SafetyTrainingStatus @default(NOT_STARTED)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([employeeId])
@@ -686,16 +694,16 @@ model SafetyTraining {
 }
 
 enum SafetyTrainingType {
-  GENERAL           // Formazione generale (4 ore)
-  SPECIFIC_LOW      // Rischio basso (4 ore) - Uffici, commercio
-  SPECIFIC_MEDIUM   // Rischio medio (8 ore) - Agricoltura, pesca
-  SPECIFIC_HIGH     // Rischio alto (12 ore) - Costruzioni, sanità
-  FIRST_AID         // Primo soccorso
-  FIRE_PREVENTION   // Antincendio
-  RLS               // Rappresentante Lavoratori Sicurezza (32 ore)
-  PREPOSTO          // Preposto (8 ore aggiuntive)
-  DIRIGENTE         // Dirigente (16 ore)
-  UPDATE            // Aggiornamento periodico
+  GENERAL // Formazione generale (4 ore)
+  SPECIFIC_LOW // Rischio basso (4 ore) - Uffici, commercio
+  SPECIFIC_MEDIUM // Rischio medio (8 ore) - Agricoltura, pesca
+  SPECIFIC_HIGH // Rischio alto (12 ore) - Costruzioni, sanità
+  FIRST_AID // Primo soccorso
+  FIRE_PREVENTION // Antincendio
+  RLS // Rappresentante Lavoratori Sicurezza (32 ore)
+  PREPOSTO // Preposto (8 ore aggiuntive)
+  DIRIGENTE // Dirigente (16 ore)
+  UPDATE // Aggiornamento periodico
 }
 
 enum SafetyTrainingStatus {
@@ -707,24 +715,24 @@ enum SafetyTrainingStatus {
 
 // DVR - Documento Valutazione Rischi
 model DvrAcknowledgment {
-  id          String   @id @default(cuid())
-  tenantId    String
-  employeeId  String
+  id         String @id @default(cuid())
+  tenantId   String
+  employeeId String
 
-  dvrVersion  String            // Versione DVR (es. "1.0 - Gennaio 2025")
-  dvrDate     DateTime          // Data documento DVR
+  dvrVersion String // Versione DVR (es. "1.0 - Gennaio 2025")
+  dvrDate    DateTime // Data documento DVR
 
-  acknowledgedAt DateTime?      // Quando il dipendente ha preso visione
-  acknowledgedBy String?        // User ID di chi ha registrato la presa visione
-  signature      String?        // Path file firma se cartacea
+  acknowledgedAt DateTime? // Quando il dipendente ha preso visione
+  acknowledgedBy String? // User ID di chi ha registrato la presa visione
+  signature      String? // Path file firma se cartacea
 
-  notes       String?           // Note aggiuntive
+  notes String? // Note aggiuntive
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@unique([employeeId, dvrVersion])
   @@index([tenantId])
@@ -735,48 +743,48 @@ model DvrAcknowledgment {
 // ============================================
 
 model DisciplinaryProcedure {
-  id          String   @id @default(cuid())
-  tenantId    String
-  employeeId  String
+  id         String @id @default(cuid())
+  tenantId   String
+  employeeId String
 
   // Tipo infrazione
-  infractionType    DisciplinaryInfractionType
-  infractionDate    DateTime
-  infractionDescription String @db.Text
+  infractionType        DisciplinaryInfractionType
+  infractionDate        DateTime
+  infractionDescription String                     @db.Text
 
   // Fase 1: Contestazione (Art. 7 comma 2)
-  contestationDate  DateTime?
-  contestationText  String?   @db.Text
-  contestationDeliveryMethod String?  // "raccomandata", "consegna_mano", "pec"
-  contestationDeliveredAt DateTime?
+  contestationDate           DateTime?
+  contestationText           String?   @db.Text
+  contestationDeliveryMethod String? // "raccomandata", "consegna_mano", "pec"
+  contestationDeliveredAt    DateTime?
 
   // Fase 2: Termine difesa (5 giorni Art. 7 comma 5)
-  defenseDeadline   DateTime?         // contestationDeliveredAt + 5 giorni
-  defenseReceivedAt DateTime?
-  defenseText       String?   @db.Text
-  defenseRequestedHearing Boolean @default(false)
-  hearingDate       DateTime?
-  hearingNotes      String?   @db.Text
+  defenseDeadline         DateTime? // contestationDeliveredAt + 5 giorni
+  defenseReceivedAt       DateTime?
+  defenseText             String?   @db.Text
+  defenseRequestedHearing Boolean   @default(false)
+  hearingDate             DateTime?
+  hearingNotes            String?   @db.Text
 
   // Fase 3: Provvedimento
-  decisionDate      DateTime?
-  sanctionType      DisciplinarySanctionType?
-  sanctionDetails   String?   @db.Text
+  decisionDate        DateTime?
+  sanctionType        DisciplinarySanctionType?
+  sanctionDetails     String?                   @db.Text
   sanctionDeliveredAt DateTime?
 
   // Impugnazione
-  appealedAt        DateTime?
-  appealOutcome     String?
+  appealedAt    DateTime?
+  appealOutcome String?
 
-  status      DisciplinaryStatus @default(DRAFT)
-  createdBy   String             // User ID
+  status    DisciplinaryStatus @default(DRAFT)
+  createdBy String // User ID
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  documents   DisciplinaryDocument[]
+  tenant    Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee  Employee               @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  documents DisciplinaryDocument[]
 
   @@index([tenantId])
   @@index([employeeId])
@@ -784,104 +792,104 @@ model DisciplinaryProcedure {
 }
 
 enum DisciplinaryInfractionType {
-  TARDINESS           // Ritardo
-  ABSENCE             // Assenza ingiustificata
-  INSUBORDINATION     // Insubordinazione
-  NEGLIGENCE          // Negligenza
-  MISCONDUCT          // Comportamento scorretto
-  POLICY_VIOLATION    // Violazione regolamento
-  SAFETY_VIOLATION    // Violazione norme sicurezza
-  HARASSMENT          // Molestie
-  THEFT               // Furto
-  FRAUD               // Frode
-  OTHER               // Altro
+  TARDINESS // Ritardo
+  ABSENCE // Assenza ingiustificata
+  INSUBORDINATION // Insubordinazione
+  NEGLIGENCE // Negligenza
+  MISCONDUCT // Comportamento scorretto
+  POLICY_VIOLATION // Violazione regolamento
+  SAFETY_VIOLATION // Violazione norme sicurezza
+  HARASSMENT // Molestie
+  THEFT // Furto
+  FRAUD // Frode
+  OTHER // Altro
 }
 
 enum DisciplinarySanctionType {
-  VERBAL_WARNING      // Rimprovero verbale
-  WRITTEN_WARNING     // Ammonizione scritta
-  FINE                // Multa (max 4 ore retribuzione)
-  SUSPENSION          // Sospensione (max 10 giorni)
-  DISMISSAL_NOTICE    // Licenziamento con preavviso
+  VERBAL_WARNING // Rimprovero verbale
+  WRITTEN_WARNING // Ammonizione scritta
+  FINE // Multa (max 4 ore retribuzione)
+  SUSPENSION // Sospensione (max 10 giorni)
+  DISMISSAL_NOTICE // Licenziamento con preavviso
   DISMISSAL_IMMEDIATE // Licenziamento per giusta causa
-  NO_SANCTION         // Archiviazione senza sanzione
+  NO_SANCTION // Archiviazione senza sanzione
 }
 
 enum DisciplinaryStatus {
-  DRAFT               // Bozza
-  CONTESTATION_SENT   // Contestazione inviata
-  AWAITING_DEFENSE    // In attesa difese
-  DEFENSE_RECEIVED    // Difese ricevute
-  HEARING_SCHEDULED   // Audizione programmata
-  PENDING_DECISION    // In attesa decisione
-  SANCTION_ISSUED     // Provvedimento emesso
-  APPEALED            // Impugnato
-  CLOSED              // Chiuso
+  DRAFT // Bozza
+  CONTESTATION_SENT // Contestazione inviata
+  AWAITING_DEFENSE // In attesa difese
+  DEFENSE_RECEIVED // Difese ricevute
+  HEARING_SCHEDULED // Audizione programmata
+  PENDING_DECISION // In attesa decisione
+  SANCTION_ISSUED // Provvedimento emesso
+  APPEALED // Impugnato
+  CLOSED // Chiuso
 }
 
 // Documenti procedura disciplinare
 model DisciplinaryDocument {
-  id            String   @id @default(cuid())
-  procedureId   String
+  id          String @id @default(cuid())
+  procedureId String
 
-  type          DisciplinaryDocType
-  title         String
-  filePath      String?
-  content       String?  @db.Text  // Per documenti generati
+  type     DisciplinaryDocType
+  title    String
+  filePath String?
+  content  String?             @db.Text // Per documenti generati
 
-  createdAt     DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  procedure     DisciplinaryProcedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  procedure DisciplinaryProcedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
 }
 
 enum DisciplinaryDocType {
-  CONTESTATION_LETTER   // Lettera contestazione
-  DEFENSE_LETTER        // Lettera difese dipendente
-  HEARING_MINUTES       // Verbale audizione
-  SANCTION_LETTER       // Lettera provvedimento
-  APPEAL                // Impugnazione
-  OTHER                 // Altro documento
+  CONTESTATION_LETTER // Lettera contestazione
+  DEFENSE_LETTER // Lettera difese dipendente
+  HEARING_MINUTES // Verbale audizione
+  SANCTION_LETTER // Lettera provvedimento
+  APPEAL // Impugnazione
+  OTHER // Altro documento
 }
 
 // Codice Disciplinare (affissione Art. 7 comma 1)
 model DisciplinaryCode {
-  id          String   @id @default(cuid())
-  tenantId    String   @unique  // Un solo codice per tenant
+  id       String @id @default(cuid())
+  tenantId String @unique // Un solo codice per tenant
 
-  version     String            // Versione documento
-  content     String   @db.Text // Contenuto codice disciplinare
+  version String // Versione documento
+  content String @db.Text // Contenuto codice disciplinare
 
   // Affissione (obbligatoria Art. 7 L. 300/1970)
-  postedAt    DateTime?         // Data affissione
-  postedBy    String?           // Chi ha affisso
-  postedLocation String?        // Dove è stato affisso (es. "Bacheca ingresso")
+  postedAt       DateTime? // Data affissione
+  postedBy       String? // Chi ha affisso
+  postedLocation String? // Dove è stato affisso (es. "Bacheca ingresso")
 
   // Evidenza affissione
-  photoPath   String?           // Foto bacheca con codice affisso
+  photoPath String? // Foto bacheca con codice affisso
 
-  isActive    Boolean  @default(true)
+  isActive Boolean @default(true)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant          Tenant                           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   acknowledgments DisciplinaryCodeAcknowledgment[]
 }
 
 model DisciplinaryCodeAcknowledgment {
-  id          String   @id @default(cuid())
-  tenantId    String
-  codeId      String
-  employeeId  String
+  id         String @id @default(cuid())
+  tenantId   String
+  codeId     String
+  employeeId String
 
   acknowledgedAt DateTime @default(now())
-  method      String   @default("DIGITAL")  // DIGITAL, PAPER, EMAIL
+  method         String   @default("DIGITAL") // DIGITAL, PAPER, EMAIL
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  code        DisciplinaryCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  code     DisciplinaryCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  employee Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@unique([employeeId, codeId])
   @@index([tenantId])
@@ -892,50 +900,50 @@ model DisciplinaryCodeAcknowledgment {
 // ============================================
 
 model WhistleblowingReport {
-  id          String   @id @default(cuid())
-  tenantId    String
+  id       String @id @default(cuid())
+  tenantId String
 
   // Dati segnalazione (anonima o nominativa)
-  reporterType WhistleblowerType
-  reporterName String?           // Solo se non anonimo
+  reporterType  WhistleblowerType
+  reporterName  String? // Solo se non anonimo
   reporterEmail String?
   reporterPhone String?
-  reporterRole String?           // Ruolo in azienda
+  reporterRole  String? // Ruolo in azienda
 
   // Segnalazione
-  reportDate   DateTime @default(now())
-  category     WhistleblowingCategory
-  title        String
-  description  String   @db.Text
-  personsInvolved String? @db.Text  // Persone coinvolte
-  evidence     String?  @db.Text    // Prove/documenti
+  reportDate      DateTime               @default(now())
+  category        WhistleblowingCategory
+  title           String
+  description     String                 @db.Text
+  personsInvolved String?                @db.Text // Persone coinvolte
+  evidence        String?                @db.Text // Prove/documenti
 
   // Gestione
-  assignedTo   String?           // User ID responsabile
-  status       WhistleblowingStatus @default(RECEIVED)
+  assignedTo String? // User ID responsabile
+  status     WhistleblowingStatus @default(RECEIVED)
 
   // Timeline
-  acknowledgedAt DateTime?       // Conferma ricezione (entro 7 giorni)
-  investigationStartedAt DateTime?
+  acknowledgedAt           DateTime? // Conferma ricezione (entro 7 giorni)
+  investigationStartedAt   DateTime?
   investigationCompletedAt DateTime?
-  closedAt     DateTime?
+  closedAt                 DateTime?
 
   // Esito
-  outcome      String?  @db.Text
-  actionsTaken String?  @db.Text
+  outcome      String? @db.Text
+  actionsTaken String? @db.Text
 
   // Tracking comunicazioni (obbligo feedback entro 3 mesi)
   lastFeedbackAt DateTime?
 
   // Sicurezza
-  accessCode   String   @unique  // Codice per accesso anonimo
+  accessCode String @unique // Codice per accesso anonimo
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  messages     WhistleblowingMessage[]
-  documents    WhistleblowingDocument[]
+  tenant    Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages  WhistleblowingMessage[]
+  documents WhistleblowingDocument[]
 
   @@index([tenantId])
   @@index([status])
@@ -944,60 +952,60 @@ model WhistleblowingReport {
 
 enum WhistleblowerType {
   ANONYMOUS
-  CONFIDENTIAL  // Nome noto solo al gestore
-  IDENTIFIED    // Nome visibile
+  CONFIDENTIAL // Nome noto solo al gestore
+  IDENTIFIED // Nome visibile
 }
 
 enum WhistleblowingCategory {
-  FRAUD                  // Frode
-  CORRUPTION             // Corruzione
-  SAFETY_VIOLATION       // Violazioni sicurezza
-  ENVIRONMENTAL          // Violazioni ambientali
-  DISCRIMINATION         // Discriminazione
-  HARASSMENT             // Molestie
-  DATA_BREACH            // Violazione dati
-  CONFLICT_OF_INTEREST   // Conflitto interessi
+  FRAUD // Frode
+  CORRUPTION // Corruzione
+  SAFETY_VIOLATION // Violazioni sicurezza
+  ENVIRONMENTAL // Violazioni ambientali
+  DISCRIMINATION // Discriminazione
+  HARASSMENT // Molestie
+  DATA_BREACH // Violazione dati
+  CONFLICT_OF_INTEREST // Conflitto interessi
   FINANCIAL_IRREGULARITY // Irregolarità finanziarie
-  OTHER                  // Altro
+  OTHER // Altro
 }
 
 enum WhistleblowingStatus {
-  RECEIVED              // Ricevuta
-  ACKNOWLEDGED          // Confermata ricezione
-  UNDER_INVESTIGATION   // In indagine
+  RECEIVED // Ricevuta
+  ACKNOWLEDGED // Confermata ricezione
+  UNDER_INVESTIGATION // In indagine
   ADDITIONAL_INFO_REQUESTED // Richieste info aggiuntive
-  SUBSTANTIATED         // Fondata
-  UNSUBSTANTIATED       // Non fondata
-  CLOSED                // Chiusa
+  SUBSTANTIATED // Fondata
+  UNSUBSTANTIATED // Non fondata
+  CLOSED // Chiusa
 }
 
 // Messaggi whistleblowing (comunicazione anonima)
 model WhistleblowingMessage {
-  id          String   @id @default(cuid())
-  reportId    String
+  id       String @id @default(cuid())
+  reportId String
 
-  senderType  String   // "reporter" o "manager"
-  content     String   @db.Text
+  senderType String // "reporter" o "manager"
+  content    String @db.Text
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  report      WhistleblowingReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  report WhistleblowingReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
 }
 
 // Documenti allegati whistleblowing
 model WhistleblowingDocument {
-  id          String   @id @default(cuid())
-  reportId    String
+  id       String @id @default(cuid())
+  reportId String
 
-  fileName    String
-  filePath    String
-  fileSize    Int?
-  mimeType    String?
-  uploadedBy  String   // "reporter" o user ID
+  fileName   String
+  filePath   String
+  fileSize   Int?
+  mimeType   String?
+  uploadedBy String // "reporter" o user ID
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  report      WhistleblowingReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  report WhistleblowingReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
 }
 
 // ============================================
@@ -1005,9 +1013,9 @@ model WhistleblowingDocument {
 // ============================================
 
 model OnboardingTimeline {
-  id          String   @id @default(cuid())
-  tenantId    String
-  employeeId  String
+  id         String @id @default(cuid())
+  tenantId   String
+  employeeId String
 
   // Fase procedurale
   phase       OnboardingPhase
@@ -1015,28 +1023,28 @@ model OnboardingTimeline {
   description String?
 
   // Tempistiche
-  dueDate     DateTime?         // Scadenza prevista
+  dueDate     DateTime? // Scadenza prevista
   startedAt   DateTime?
   completedAt DateTime?
 
   // Responsabile
-  assignedTo  String?           // User ID responsabile
-  completedBy String?           // User ID chi ha completato
+  assignedTo  String? // User ID responsabile
+  completedBy String? // User ID chi ha completato
 
   // Documenti correlati
-  documentId  String?           // Riferimento a Document se applicabile
+  documentId String? // Riferimento a Document se applicabile
 
   // Note
-  notes       String?
+  notes String?
 
-  status      OnboardingPhaseStatus @default(PENDING)
-  order       Int               // Ordine nella timeline
+  status OnboardingPhaseStatus @default(PENDING)
+  order  Int // Ordine nella timeline
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([employeeId])
@@ -1045,41 +1053,41 @@ model OnboardingTimeline {
 
 enum OnboardingPhase {
   // Pre-assunzione
-  OFFER_LETTER              // Lettera d'offerta
-  DOCUMENTS_COLLECTION      // Raccolta documenti
-  BACKGROUND_CHECK          // Verifica referenze
+  OFFER_LETTER // Lettera d'offerta
+  DOCUMENTS_COLLECTION // Raccolta documenti
+  BACKGROUND_CHECK // Verifica referenze
 
   // Giorno 1
-  WELCOME                   // Accoglienza
-  WORKSPACE_SETUP           // Postazione lavoro
-  IT_ACCOUNTS               // Account IT
-  BADGE_ACCESS              // Badge e accessi
+  WELCOME // Accoglienza
+  WORKSPACE_SETUP // Postazione lavoro
+  IT_ACCOUNTS // Account IT
+  BADGE_ACCESS // Badge e accessi
 
   // Prima settimana
-  COMPANY_ORIENTATION       // Orientamento aziendale
-  TEAM_INTRODUCTION         // Presentazione team
-  TOOLS_TRAINING            // Formazione strumenti
+  COMPANY_ORIENTATION // Orientamento aziendale
+  TEAM_INTRODUCTION // Presentazione team
+  TOOLS_TRAINING // Formazione strumenti
 
   // Sicurezza (D.Lgs. 81/2008)
-  SAFETY_TRAINING_GENERAL   // Formazione generale 4h
-  SAFETY_TRAINING_SPECIFIC  // Formazione specifica
-  DPI_DELIVERY              // Consegna DPI
-  DVR_ACKNOWLEDGMENT        // Presa visione DVR
-  EMERGENCY_PROCEDURES      // Procedure emergenza
+  SAFETY_TRAINING_GENERAL // Formazione generale 4h
+  SAFETY_TRAINING_SPECIFIC // Formazione specifica
+  DPI_DELIVERY // Consegna DPI
+  DVR_ACKNOWLEDGMENT // Presa visione DVR
+  EMERGENCY_PROCEDURES // Procedure emergenza
 
   // Compliance
-  PRIVACY_CONSENT           // Consenso privacy
-  CONTRACT_SIGNING          // Firma contratto
-  DISCIPLINARY_CODE         // Presa visione codice disciplinare
-  CCNL_INFORMATION          // Informativa CCNL
+  PRIVACY_CONSENT // Consenso privacy
+  CONTRACT_SIGNING // Firma contratto
+  DISCIPLINARY_CODE // Presa visione codice disciplinare
+  CCNL_INFORMATION // Informativa CCNL
 
   // Periodo prova
-  PROBATION_REVIEW_30       // Review 30 giorni
-  PROBATION_REVIEW_60       // Review 60 giorni
-  PROBATION_FINAL           // Esito periodo prova
+  PROBATION_REVIEW_30 // Review 30 giorni
+  PROBATION_REVIEW_60 // Review 60 giorni
+  PROBATION_FINAL // Esito periodo prova
 
   // Variazioni
-  DATA_CHANGE_REQUEST       // Richiesta variazione dati
+  DATA_CHANGE_REQUEST // Richiesta variazione dati
 }
 
 enum OnboardingPhaseStatus {
@@ -1092,37 +1100,37 @@ enum OnboardingPhaseStatus {
 
 // Richieste variazione dati dipendente
 model EmployeeDataChangeRequest {
-  id          String   @id @default(cuid())
-  tenantId    String
-  employeeId  String
+  id         String @id @default(cuid())
+  tenantId   String
+  employeeId String
 
   // Tipo variazione
-  changeType  DataChangeType
+  changeType DataChangeType
 
   // Dati variazione
-  fieldName   String            // Campo da modificare
-  oldValue    String?
-  newValue    String
-  reason      String?           // Motivazione
+  fieldName String // Campo da modificare
+  oldValue  String?
+  newValue  String
+  reason    String? // Motivazione
 
   // Documenti giustificativi
-  documentPath String?          // Es. nuovo documento identità
+  documentPath String? // Es. nuovo documento identità
 
   // Workflow approvazione
   requestedAt DateTime @default(now())
-  requestedBy String            // User ID richiedente
+  requestedBy String // User ID richiedente
 
   reviewedAt  DateTime?
-  reviewedBy  String?           // User ID approvatore
+  reviewedBy  String? // User ID approvatore
   reviewNotes String?
 
-  status      DataChangeStatus @default(PENDING)
+  status DataChangeStatus @default(PENDING)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([employeeId])
@@ -1130,12 +1138,12 @@ model EmployeeDataChangeRequest {
 }
 
 enum DataChangeType {
-  PERSONAL_INFO      // Dati anagrafici
-  CONTACT_INFO       // Recapiti
-  BANK_INFO          // Dati bancari
-  TAX_INFO           // Dati fiscali
-  EMERGENCY_CONTACT  // Contatto emergenza
-  ADDRESS            // Indirizzo
+  PERSONAL_INFO // Dati anagrafici
+  CONTACT_INFO // Recapiti
+  BANK_INFO // Dati bancari
+  TAX_INFO // Dati fiscali
+  EMERGENCY_CONTACT // Contatto emergenza
+  ADDRESS // Indirizzo
 }
 
 enum DataChangeStatus {
@@ -1147,9 +1155,9 @@ enum DataChangeStatus {
 
 // Esito periodo di prova
 model ProbationOutcome {
-  id          String   @id @default(cuid())
-  tenantId    String
-  employeeId  String
+  id         String @id @default(cuid())
+  tenantId   String
+  employeeId String
 
   // Date periodo prova
   probationStartDate DateTime
@@ -1157,53 +1165,53 @@ model ProbationOutcome {
 
   // Valutazione
   evaluationDate DateTime
-  evaluatedBy    String           // User ID valutatore
+  evaluatedBy    String // User ID valutatore
 
   // Criteri valutazione
-  technicalSkills    Int?         // 1-5
-  adaptability       Int?         // 1-5
-  teamwork           Int?         // 1-5
-  punctuality        Int?         // 1-5
-  initiative         Int?         // 1-5
-  overallScore       Float?
+  technicalSkills Int? // 1-5
+  adaptability    Int? // 1-5
+  teamwork        Int? // 1-5
+  punctuality     Int? // 1-5
+  initiative      Int? // 1-5
+  overallScore    Float?
 
   // Note valutazione
-  strengths          String? @db.Text
+  strengths           String? @db.Text
   areasForImprovement String? @db.Text
-  evaluatorNotes     String? @db.Text
+  evaluatorNotes      String? @db.Text
 
   // Esito
-  outcome     ProbationResult
-  outcomeDate DateTime?
-  outcomeNotes String? @db.Text
+  outcome      ProbationResult
+  outcomeDate  DateTime?
+  outcomeNotes String?         @db.Text
 
   // Se licenziamento
-  terminationDate DateTime?
+  terminationDate   DateTime?
   terminationReason String?
 
   // Comunicazione
-  notifiedAt  DateTime?
-  notificationMethod String?     // "colloquio", "lettera", "email"
+  notifiedAt         DateTime?
+  notificationMethod String? // "colloquio", "lettera", "email"
 
   // Firma dipendente
   employeeSignedAt DateTime?
   signaturePath    String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@unique([employeeId])
   @@index([tenantId])
 }
 
 enum ProbationResult {
-  CONFIRMED           // Confermato in ruolo
-  EXTENDED            // Periodo prova prolungato
-  TERMINATED          // Licenziamento durante prova
-  RESIGNED            // Dimissioni durante prova
+  CONFIRMED // Confermato in ruolo
+  EXTENDED // Periodo prova prolungato
+  TERMINATED // Licenziamento durante prova
+  RESIGNED // Dimissioni durante prova
 }
 
 // ============================================
@@ -1213,15 +1221,15 @@ enum ProbationResult {
 // Collegamento Consulente-Aziende
 model ConsultantClient {
   id           String   @id @default(cuid())
-  consultantId String   // User ID del consulente
-  tenantId     String   // Azienda cliente
+  consultantId String // User ID del consulente
+  tenantId     String // Azienda cliente
   addedAt      DateTime @default(now())
-  addedBy      String?  // Chi ha aggiunto il collegamento
+  addedBy      String? // Chi ha aggiunto il collegamento
   isActive     Boolean  @default(true)
-  permissions  Json?    // Permessi specifici se necessari
+  permissions  Json? // Permessi specifici se necessari
 
-  consultant   User     @relation("ConsultantClients", fields: [consultantId], references: [id], onDelete: Cascade)
-  tenant       Tenant   @relation("TenantConsultants", fields: [tenantId], references: [id], onDelete: Cascade)
+  consultant User   @relation("ConsultantClients", fields: [consultantId], references: [id], onDelete: Cascade)
+  tenant     Tenant @relation("TenantConsultants", fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([consultantId, tenantId])
   @@index([consultantId])
@@ -1230,17 +1238,17 @@ model ConsultantClient {
 
 // Inviti consulente
 model ConsultantInvite {
-  id           String   @id @default(cuid())
-  tenantId     String
-  email        String
-  invitedBy    String
-  token        String   @unique
-  expiresAt    DateTime
-  acceptedAt   DateTime?
-  createdAt    DateTime @default(now())
+  id         String    @id @default(cuid())
+  tenantId   String
+  email      String
+  invitedBy  String
+  token      String    @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  inviter      User     @relation("ConsultantInviter", fields: [invitedBy], references: [id])
+  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inviter User   @relation("ConsultantInviter", fields: [invitedBy], references: [id])
 
   @@index([tenantId])
   @@index([email])
@@ -1253,19 +1261,19 @@ model ConsultantInvite {
 
 // Appunti privati del gestore sul dipendente
 model EmployeeNote {
-  id         String   @id @default(cuid())
+  id         String       @id @default(cuid())
   employeeId String
   authorId   String
   tenantId   String
-  content    String   @db.Text
+  content    String       @db.Text
   category   NoteCategory @default(GENERAL)
-  isPrivate  Boolean  @default(true) // Solo visibile a OWNER/MANAGER
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  isPrivate  Boolean      @default(true) // Solo visibile a OWNER/MANAGER
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
-  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  author     User     @relation("NoteAuthor", fields: [authorId], references: [id])
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  author   User     @relation("NoteAuthor", fields: [authorId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
   @@index([tenantId])
@@ -1283,24 +1291,24 @@ enum NoteCategory {
 
 // Buste Paga
 model Payslip {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   employeeId   String
   tenantId     String
-  period       String   // "2026-01" formato YYYY-MM
-  grossAmount  Decimal? @db.Decimal(10, 2)
-  netAmount    Decimal? @db.Decimal(10, 2)
+  period       String // "2026-01" formato YYYY-MM
+  grossAmount  Decimal?  @db.Decimal(10, 2)
+  netAmount    Decimal?  @db.Decimal(10, 2)
   fileName     String
   fileUrl      String
   fileSize     Int?
   uploadedBy   String
-  uploadedAt   DateTime @default(now())
+  uploadedAt   DateTime  @default(now())
   viewedAt     DateTime? // Quando il dipendente l'ha vista
   viewedIp     String?
   downloadedAt DateTime?
 
-  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  uploader     User     @relation("PayslipUploader", fields: [uploadedBy], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  uploader User     @relation("PayslipUploader", fields: [uploadedBy], references: [id])
 
   @@unique([employeeId, period])
   @@index([tenantId])
@@ -1314,17 +1322,17 @@ model Payslip {
 
 // Richiesta firma documento
 model DocumentSignatureRequest {
-  id              String   @id @default(cuid())
-  tenantId        String
-  documentId      String   // Riferimento al documento
-  employeeId      String
-  requestedBy     String
-  requestedAt     DateTime @default(now())
-  dueDate         DateTime?
-  reminderSent    Boolean  @default(false)
-  reminderSentAt  DateTime?
-  status          SignatureStatus @default(PENDING)
-  priority        SignaturePriority @default(NORMAL)
+  id             String            @id @default(cuid())
+  tenantId       String
+  documentId     String // Riferimento al documento
+  employeeId     String
+  requestedBy    String
+  requestedAt    DateTime          @default(now())
+  dueDate        DateTime?
+  reminderSent   Boolean           @default(false)
+  reminderSentAt DateTime?
+  status         SignatureStatus   @default(PENDING)
+  priority       SignaturePriority @default(NORMAL)
 
   // Configurazione firma
   requirePassword Boolean @default(true)
@@ -1333,18 +1341,18 @@ model DocumentSignatureRequest {
   minReadingTime  Int     @default(30) // Secondi minimi di lettura
 
   // Campi firma (compilati quando firma)
-  signedAt        DateTime?
-  signatureData   Json?    // Dati firma completi
+  signedAt      DateTime?
+  signatureData Json? // Dati firma completi
 
   // Certificato generato
-  certificateId   String?
-  certificateUrl  String?
+  certificateId  String?
+  certificateUrl String?
 
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  document        Document @relation(fields: [documentId], references: [id])
-  employee        Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  requester       User     @relation("SignatureRequester", fields: [requestedBy], references: [id])
-  auditLogs       SignatureAuditLog[]
+  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  document  Document            @relation(fields: [documentId], references: [id])
+  employee  Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  requester User                @relation("SignatureRequester", fields: [requestedBy], references: [id])
+  auditLogs SignatureAuditLog[]
 
   @@index([tenantId])
   @@index([employeeId])
@@ -1371,45 +1379,45 @@ enum SignaturePriority {
 
 // Audit Trail Firma (prova legale incontestabile)
 model SignatureAuditLog {
-  id                  String   @id @default(cuid())
-  signatureRequestId  String
-  tenantId            String
-  employeeId          String
-  action              SignatureAction
-  timestamp           DateTime @default(now())
+  id                 String          @id @default(cuid())
+  signatureRequestId String
+  tenantId           String
+  employeeId         String
+  action             SignatureAction
+  timestamp          DateTime        @default(now())
 
   // Dati forensi
-  ipAddress           String
-  userAgent           String
-  deviceFingerprint   String?
-  geoLocation         Json?    // {city, region, country, lat, lng}
+  ipAddress         String
+  userAgent         String
+  deviceFingerprint String?
+  geoLocation       Json? // {city, region, country, lat, lng}
 
   // Per azione password
-  passwordVerified    Boolean?
+  passwordVerified Boolean?
 
   // Per azione OTP
-  otpMethod           String?  // "email" | "totp" | "sms"
-  otpVerified         Boolean?
-  otpAttempts         Int?
+  otpMethod   String? // "email" | "totp" | "sms"
+  otpVerified Boolean?
+  otpAttempts Int?
 
   // Per azione frase conferma
-  confirmationPhrase  String?  // Frase digitata dall'utente
-  expectedPhrase      String?  // Frase attesa
+  confirmationPhrase String? // Frase digitata dall'utente
+  expectedPhrase     String? // Frase attesa
 
   // Per documento
-  documentHash        String?  // SHA-256 del documento
+  documentHash String? // SHA-256 del documento
 
   // Scroll tracking
-  scrollPercentage    Int?     // 0-100
-  timeOnDocument      Int?     // Secondi
-  pagesViewed         Int?
-  totalPages          Int?
+  scrollPercentage Int? // 0-100
+  timeOnDocument   Int? // Secondi
+  pagesViewed      Int?
+  totalPages       Int?
 
   // Metadati aggiuntivi
-  metadata            Json?
+  metadata Json?
 
-  signatureRequest    DocumentSignatureRequest @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
-  tenant              Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  signatureRequest DocumentSignatureRequest @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+  tenant           Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([signatureRequestId])
   @@index([tenantId])
@@ -1443,52 +1451,52 @@ enum SignatureAction {
 
 // Timbrature presenze
 model TimeEntry {
-  id           String    @id @default(cuid())
-  employeeId   String
-  tenantId     String
-  date         DateTime  @db.Date
-  clockIn      DateTime?
-  clockOut     DateTime?
+  id         String    @id @default(cuid())
+  employeeId String
+  tenantId   String
+  date       DateTime  @db.Date
+  clockIn    DateTime?
+  clockOut   DateTime?
 
   // Geolocalizzazione entrata
-  clockInLat   Decimal?  @db.Decimal(10, 8)
-  clockInLng   Decimal?  @db.Decimal(11, 8)
-  clockInAddress String?
+  clockInLat      Decimal? @db.Decimal(10, 8)
+  clockInLng      Decimal? @db.Decimal(11, 8)
+  clockInAddress  String?
   clockInAccuracy Float? // Accuratezza GPS in metri
 
   // Geolocalizzazione uscita
-  clockOutLat  Decimal?  @db.Decimal(10, 8)
-  clockOutLng  Decimal?  @db.Decimal(11, 8)
-  clockOutAddress String?
+  clockOutLat      Decimal? @db.Decimal(10, 8)
+  clockOutLng      Decimal? @db.Decimal(11, 8)
+  clockOutAddress  String?
   clockOutAccuracy Float?
 
   // Metadati dispositivo
-  clockInIp    String?
-  clockOutIp   String?
-  clockInDevice String?
-  clockOutDevice String?
-  clockInUserAgent String?
+  clockInIp         String?
+  clockOutIp        String?
+  clockInDevice     String?
+  clockOutDevice    String?
+  clockInUserAgent  String?
   clockOutUserAgent String?
 
   // Calcoli automatici
-  workedMinutes Int?
-  breakMinutes  Int?     @default(0)
-  overtimeMinutes Int?   @default(0)
+  workedMinutes   Int?
+  breakMinutes    Int? @default(0)
+  overtimeMinutes Int? @default(0)
 
   // Status e approvazione
-  status       TimeEntryStatus @default(PENDING)
+  status       TimeEntryStatus  @default(PENDING)
   anomalyType  TimeAnomalyType?
   notes        String?
   managerNotes String?
   approvedBy   String?
   approvedAt   DateTime?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  approver     User?    @relation("TimeEntryApprover", fields: [approvedBy], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  approver User?    @relation("TimeEntryApprover", fields: [approvedBy], references: [id])
 
   @@unique([employeeId, date])
   @@index([tenantId])
@@ -1515,20 +1523,20 @@ enum TimeAnomalyType {
 
 // Configurazione sede per geofencing
 model WorkLocation {
-  id           String   @id @default(cuid())
+  id           String  @id @default(cuid())
   tenantId     String
-  name         String   // "Sede principale", "Filiale Milano"
+  name         String // "Sede principale", "Filiale Milano"
   address      String
-  latitude     Decimal  @db.Decimal(10, 8)
-  longitude    Decimal  @db.Decimal(11, 8)
-  radiusMeters Int      @default(100) // Raggio consentito per timbratura
-  isDefault    Boolean  @default(false)
-  isActive     Boolean  @default(true)
+  latitude     Decimal @db.Decimal(10, 8)
+  longitude    Decimal @db.Decimal(11, 8)
+  radiusMeters Int     @default(100) // Raggio consentito per timbratura
+  isDefault    Boolean @default(false)
+  isActive     Boolean @default(true)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1539,34 +1547,34 @@ model WorkLocation {
 
 // Richieste ferie e permessi
 model LeaveRequest {
-  id           String   @id @default(cuid())
-  employeeId   String
-  tenantId     String
-  type         LeaveType
-  startDate    DateTime @db.Date
-  endDate      DateTime @db.Date
-  startHalf    Boolean  @default(false) // Mezza giornata inizio (pomeriggio)
-  endHalf      Boolean  @default(false) // Mezza giornata fine (mattina)
-  totalDays    Decimal  @db.Decimal(4, 1)
-  totalHours   Decimal? @db.Decimal(5, 1) // Per permessi orari
-  reason       String?
+  id            String    @id @default(cuid())
+  employeeId    String
+  tenantId      String
+  type          LeaveType
+  startDate     DateTime  @db.Date
+  endDate       DateTime  @db.Date
+  startHalf     Boolean   @default(false) // Mezza giornata inizio (pomeriggio)
+  endHalf       Boolean   @default(false) // Mezza giornata fine (mattina)
+  totalDays     Decimal   @db.Decimal(4, 1)
+  totalHours    Decimal?  @db.Decimal(5, 1) // Per permessi orari
+  reason        String?
   attachmentUrl String? // Es. certificato medico
 
-  status       LeaveStatus @default(PENDING)
-  requestedAt  DateTime @default(now())
-  reviewedBy   String?
-  reviewedAt   DateTime?
-  reviewNotes  String?
+  status      LeaveStatus @default(PENDING)
+  requestedAt DateTime    @default(now())
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  reviewNotes String?
 
   // Notifiche
   reminderSent Boolean @default(false)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  reviewer     User?    @relation("LeaveReviewer", fields: [reviewedBy], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reviewer User?    @relation("LeaveReviewer", fields: [reviewedBy], references: [id])
 
   @@index([tenantId])
   @@index([employeeId])
@@ -1575,23 +1583,23 @@ model LeaveRequest {
 }
 
 enum LeaveType {
-  VACATION        // Ferie
-  SICK            // Malattia
-  PERSONAL        // Permesso personale
-  ROL             // Riduzione Orario Lavoro
-  EX_FESTIVITY    // Ex festività
-  PARENTAL        // Congedo parentale
-  MATERNITY       // Maternità
-  PATERNITY       // Paternità
-  BEREAVEMENT     // Lutto
-  MARRIAGE        // Matrimonio
-  STUDY           // Studio/esami (150 ore)
-  BLOOD_DONATION  // Donazione sangue
-  UNION           // Permesso sindacale
-  MEDICAL_VISIT   // Visita medica
-  LAW_104         // Legge 104
-  UNPAID          // Non retribuito
-  OTHER           // Altro
+  VACATION // Ferie
+  SICK // Malattia
+  PERSONAL // Permesso personale
+  ROL // Riduzione Orario Lavoro
+  EX_FESTIVITY // Ex festività
+  PARENTAL // Congedo parentale
+  MATERNITY // Maternità
+  PATERNITY // Paternità
+  BEREAVEMENT // Lutto
+  MARRIAGE // Matrimonio
+  STUDY // Studio/esami (150 ore)
+  BLOOD_DONATION // Donazione sangue
+  UNION // Permesso sindacale
+  MEDICAL_VISIT // Visita medica
+  LAW_104 // Legge 104
+  UNPAID // Non retribuito
+  OTHER // Altro
 }
 
 enum LeaveStatus {
@@ -1599,47 +1607,47 @@ enum LeaveStatus {
   APPROVED
   REJECTED
   CANCELLED
-  IN_PROGRESS  // Ferie in corso
-  COMPLETED    // Ferie terminate
+  IN_PROGRESS // Ferie in corso
+  COMPLETED // Ferie terminate
 }
 
 // Saldo ferie/permessi per anno
 model LeaveBalance {
-  id           String   @id @default(cuid())
-  employeeId   String
-  tenantId     String
-  year         Int
+  id         String @id @default(cuid())
+  employeeId String
+  tenantId   String
+  year       Int
 
   // Ferie
-  vacationTotal       Decimal @db.Decimal(5, 2) @default(0)
-  vacationUsed        Decimal @db.Decimal(5, 2) @default(0)
-  vacationPending     Decimal @db.Decimal(5, 2) @default(0) // Richieste in attesa
-  vacationCarryOver   Decimal @db.Decimal(5, 2) @default(0) // Da anno precedente
-  vacationExpireDate  DateTime? // Scadenza riporto
+  vacationTotal      Decimal   @default(0) @db.Decimal(5, 2)
+  vacationUsed       Decimal   @default(0) @db.Decimal(5, 2)
+  vacationPending    Decimal   @default(0) @db.Decimal(5, 2) // Richieste in attesa
+  vacationCarryOver  Decimal   @default(0) @db.Decimal(5, 2) // Da anno precedente
+  vacationExpireDate DateTime? // Scadenza riporto
 
   // Permessi ROL
-  rolTotal            Decimal @db.Decimal(5, 2) @default(0)
-  rolUsed             Decimal @db.Decimal(5, 2) @default(0)
-  rolPending          Decimal @db.Decimal(5, 2) @default(0)
+  rolTotal   Decimal @default(0) @db.Decimal(5, 2)
+  rolUsed    Decimal @default(0) @db.Decimal(5, 2)
+  rolPending Decimal @default(0) @db.Decimal(5, 2)
 
   // Ex festività
-  exFestTotal         Decimal @db.Decimal(5, 2) @default(0)
-  exFestUsed          Decimal @db.Decimal(5, 2) @default(0)
-  exFestPending       Decimal @db.Decimal(5, 2) @default(0)
+  exFestTotal   Decimal @default(0) @db.Decimal(5, 2)
+  exFestUsed    Decimal @default(0) @db.Decimal(5, 2)
+  exFestPending Decimal @default(0) @db.Decimal(5, 2)
 
   // Malattia (tracking, non saldo)
-  sickDaysUsed        Int     @default(0)
+  sickDaysUsed Int @default(0)
 
   // Legge 104
-  law104Total         Decimal @db.Decimal(5, 2) @default(0)
-  law104Used          Decimal @db.Decimal(5, 2) @default(0)
+  law104Total Decimal @default(0) @db.Decimal(5, 2)
+  law104Used  Decimal @default(0) @db.Decimal(5, 2)
 
-  notes        String?
-  updatedAt    DateTime @updatedAt
+  notes            String?
+  updatedAt        DateTime  @updatedAt
   lastCalculatedAt DateTime?
 
-  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([employeeId, year])
   @@index([tenantId])
@@ -1652,44 +1660,44 @@ model LeaveBalance {
 
 // Richieste rimborso spese
 model ExpenseRequest {
-  id           String   @id @default(cuid())
-  employeeId   String
-  tenantId     String
-  type         ExpenseType
-  date         DateTime @db.Date
-  description  String
-  amount       Decimal  @db.Decimal(10, 2)
-  currency     String   @default("EUR")
+  id          String      @id @default(cuid())
+  employeeId  String
+  tenantId    String
+  type        ExpenseType
+  date        DateTime    @db.Date
+  description String
+  amount      Decimal     @db.Decimal(10, 2)
+  currency    String      @default("EUR")
 
   // Per rimborsi chilometrici
-  kilometers   Decimal? @db.Decimal(8, 2)
-  ratePerKm    Decimal? @db.Decimal(4, 3) // Tariffa applicata
+  kilometers   Decimal?     @db.Decimal(8, 2)
+  ratePerKm    Decimal?     @db.Decimal(4, 3) // Tariffa applicata
   origin       String?
   destination  String?
   vehicleType  VehicleType?
-  vehiclePlate String?  // Targa veicolo
+  vehiclePlate String? // Targa veicolo
 
   // Per trasferte
-  tripPurpose  String?  // Motivo trasferta
-  clientName   String?  // Cliente visitato
+  tripPurpose String? // Motivo trasferta
+  clientName  String? // Cliente visitato
 
   // Allegati
-  receipts     ExpenseReceipt[]
+  receipts ExpenseReceipt[]
 
-  status       ExpenseStatus @default(PENDING)
-  requestedAt  DateTime @default(now())
-  reviewedBy   String?
-  reviewedAt   DateTime?
-  reviewNotes  String?
-  paidAt       DateTime?
-  paymentRef   String?  // Riferimento pagamento
+  status      ExpenseStatus @default(PENDING)
+  requestedAt DateTime      @default(now())
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  reviewNotes String?
+  paidAt      DateTime?
+  paymentRef  String? // Riferimento pagamento
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  reviewer     User?    @relation("ExpenseReviewer", fields: [reviewedBy], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reviewer User?    @relation("ExpenseReviewer", fields: [reviewedBy], references: [id])
 
   @@index([tenantId])
   @@index([employeeId])
@@ -1698,20 +1706,20 @@ model ExpenseRequest {
 }
 
 enum ExpenseType {
-  MILEAGE         // Rimborso km
-  TRAVEL          // Viaggio (treno, aereo, etc.)
-  ACCOMMODATION   // Alloggio
-  MEALS           // Pasti
-  TRANSPORT       // Taxi, mezzi pubblici
-  PARKING         // Parcheggio
-  TOLL            // Pedaggio autostradale
-  FUEL            // Carburante (se auto aziendale)
-  PHONE           // Telefono
-  SUPPLIES        // Materiali/forniture
-  TRAINING        // Formazione
-  CLIENT_GIFT     // Omaggi clienti
-  REPRESENTATION  // Spese rappresentanza
-  OTHER           // Altro
+  MILEAGE // Rimborso km
+  TRAVEL // Viaggio (treno, aereo, etc.)
+  ACCOMMODATION // Alloggio
+  MEALS // Pasti
+  TRANSPORT // Taxi, mezzi pubblici
+  PARKING // Parcheggio
+  TOLL // Pedaggio autostradale
+  FUEL // Carburante (se auto aziendale)
+  PHONE // Telefono
+  SUPPLIES // Materiali/forniture
+  TRAINING // Formazione
+  CLIENT_GIFT // Omaggi clienti
+  REPRESENTATION // Spese rappresentanza
+  OTHER // Altro
 }
 
 enum ExpenseStatus {
@@ -1724,46 +1732,46 @@ enum ExpenseStatus {
 }
 
 enum VehicleType {
-  CAR_PETROL      // Auto benzina
-  CAR_DIESEL      // Auto diesel
-  CAR_HYBRID      // Auto ibrida
-  CAR_ELECTRIC    // Auto elettrica
-  CAR_LPG         // Auto GPL
-  CAR_METHANE     // Auto metano
-  MOTORCYCLE      // Moto
-  SCOOTER         // Scooter
-  BICYCLE         // Bici (per alcuni CCNL)
+  CAR_PETROL // Auto benzina
+  CAR_DIESEL // Auto diesel
+  CAR_HYBRID // Auto ibrida
+  CAR_ELECTRIC // Auto elettrica
+  CAR_LPG // Auto GPL
+  CAR_METHANE // Auto metano
+  MOTORCYCLE // Moto
+  SCOOTER // Scooter
+  BICYCLE // Bici (per alcuni CCNL)
 }
 
 // Allegati spese (scontrini, ricevute)
 model ExpenseReceipt {
-  id           String   @id @default(cuid())
-  expenseId    String
-  fileName     String
-  fileUrl      String
-  fileSize     Int?
-  mimeType     String?
-  uploadedAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  expenseId  String
+  fileName   String
+  fileUrl    String
+  fileSize   Int?
+  mimeType   String?
+  uploadedAt DateTime @default(now())
 
-  expense      ExpenseRequest @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  expense ExpenseRequest @relation(fields: [expenseId], references: [id], onDelete: Cascade)
 
   @@index([expenseId])
 }
 
 // Tariffe ACI per rimborsi km
 model MileageRate {
-  id           String   @id @default(cuid())
-  vehicleType  VehicleType
-  year         Int
-  ratePerKm    Decimal  @db.Decimal(4, 3)
-  source       String?  // "Tabelle ACI 2026"
-  fuelType     String?
-  engineCc     String?  // Cilindrata (es. "fino a 1200cc")
-  validFrom    DateTime
-  validTo      DateTime?
-  isActive     Boolean  @default(true)
+  id          String      @id @default(cuid())
+  vehicleType VehicleType
+  year        Int
+  ratePerKm   Decimal     @db.Decimal(4, 3)
+  source      String? // "Tabelle ACI 2026"
+  fuelType    String?
+  engineCc    String? // Cilindrata (es. "fino a 1200cc")
+  validFrom   DateTime
+  validTo     DateTime?
+  isActive    Boolean     @default(true)
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([vehicleType, year, engineCc])
   @@index([year])
@@ -1776,25 +1784,25 @@ model MileageRate {
 
 // Codici OTP per verifica
 model OtpCode {
-  id           String   @id @default(cuid())
-  userId       String
-  code         String
-  type         OtpType
-  purpose      String   // "document_signature", "login", "password_reset"
-  referenceId  String?  // ID del documento/richiesta
-  expiresAt    DateTime
-  usedAt       DateTime?
-  attempts     Int      @default(0)
-  maxAttempts  Int      @default(3)
+  id            String    @id @default(cuid())
+  userId        String
+  code          String
+  type          OtpType
+  purpose       String // "document_signature", "login", "password_reset"
+  referenceId   String? // ID del documento/richiesta
+  expiresAt     DateTime
+  usedAt        DateTime?
+  attempts      Int       @default(0)
+  maxAttempts   Int       @default(3)
   lastAttemptAt DateTime?
 
   // Metadata
-  ipAddress    String?
-  userAgent    String?
+  ipAddress String?
+  userAgent String?
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([code])
@@ -1809,17 +1817,17 @@ enum OtpType {
 
 // TOTP secrets per Google Authenticator
 model TotpSecret {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  secret       String   // Encrypted
-  isVerified   Boolean  @default(false)
-  verifiedAt   DateTime?
-  backupCodes  Json?    // Array di codici backup criptati
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  secret      String // Encrypted
+  isVerified  Boolean   @default(false)
+  verifiedAt  DateTime?
+  backupCodes Json? // Array di codici backup criptati
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ============================================
@@ -1828,27 +1836,27 @@ model TotpSecret {
 
 // Inviti dipendenti
 model EmployeeInvite {
-  id           String   @id @default(cuid())
-  tenantId     String
-  email        String
-  role         TenantRole @default(EMPLOYEE)
-  employeeId   String?  // Se collegato a un Employee esistente
-  invitedBy    String
-  token        String   @unique
-  expiresAt    DateTime
-  acceptedAt   DateTime?
+  id         String     @id @default(cuid())
+  tenantId   String
+  email      String
+  role       TenantRole @default(EMPLOYEE)
+  employeeId String? // Se collegato a un Employee esistente
+  invitedBy  String
+  token      String     @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
 
   // Dati pre-compilati
-  firstName    String?
-  lastName     String?
-  department   String?
-  jobTitle     String?
+  firstName  String?
+  lastName   String?
+  department String?
+  jobTitle   String?
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  inviter      User     @relation("EmployeeInviter", fields: [invitedBy], references: [id])
-  employee     Employee? @relation(fields: [employeeId], references: [id])
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inviter  User      @relation("EmployeeInviter", fields: [invitedBy], references: [id])
+  employee Employee? @relation(fields: [employeeId], references: [id])
 
   @@index([tenantId])
   @@index([email])
@@ -1860,34 +1868,34 @@ model EmployeeInvite {
 // ============================================
 
 model Notification {
-  id           String   @id @default(cuid())
-  userId       String
-  tenantId     String?
+  id       String  @id @default(cuid())
+  userId   String
+  tenantId String?
 
-  type         NotificationType
-  title        String
-  message      String
-  link         String?  // Link per azione
+  type    NotificationType
+  title   String
+  message String
+  link    String? // Link per azione
 
   // Riferimenti
-  entityType   String?  // "LeaveRequest", "ExpenseRequest", etc.
-  entityId     String?
+  entityType String? // "LeaveRequest", "ExpenseRequest", etc.
+  entityId   String?
 
-  isRead       Boolean  @default(false)
-  readAt       DateTime?
+  isRead Boolean   @default(false)
+  readAt DateTime?
 
   // Email notification
-  emailSent    Boolean  @default(false)
-  emailSentAt  DateTime?
+  emailSent   Boolean   @default(false)
+  emailSentAt DateTime?
 
   // Push notification
-  pushSent     Boolean  @default(false)
-  pushSentAt   DateTime?
+  pushSent   Boolean   @default(false)
+  pushSentAt DateTime?
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([tenantId])
@@ -1928,4 +1936,200 @@ enum NotificationType {
   // Sistema
   SYSTEM_ALERT
   WELCOME
+}
+
+// ============================================
+// TUTORIALS E FORMAZIONE
+// ============================================
+
+// Progresso tutorial utente
+model TutorialProgress {
+  id         String @id @default(cuid())
+  userId     String
+  tenantId   String
+  tutorialId String // ID del tutorial
+
+  // Stato
+  status       TutorialStatus @default(NOT_STARTED)
+  startedAt    DateTime?
+  completedAt  DateTime?
+  lastViewedAt DateTime?
+
+  // Progresso
+  currentSection    Int @default(0)
+  totalSections     Int
+  completedSections Int @default(0)
+  progressPercent   Int @default(0)
+
+  // Tracking
+  timeSpent Int @default(0) // Secondi totali
+  viewCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tutorialId, tenantId])
+  @@index([userId])
+  @@index([tenantId])
+  @@index([tutorialId])
+  @@index([status])
+}
+
+enum TutorialStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+// Analytics tutorial
+model TutorialAnalytics {
+  id         String @id @default(cuid())
+  tenantId   String
+  tutorialId String
+  year       Int
+  month      Int
+
+  // Metriche
+  views        Int @default(0)
+  completions  Int @default(0)
+  avgTimeSpent Int @default(0) // Secondi medi
+  uniqueUsers  Int @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, tutorialId, year, month])
+  @@index([tenantId])
+  @@index([tutorialId])
+}
+
+// ============================================
+// MANUALE OPERATIVO
+// ============================================
+
+enum ManualArticleStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ChecklistFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  ON_DEMAND
+}
+
+model ManualCategory {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  name        String
+  slug        String
+  icon        String?
+  description String?
+  order       Int      @default(0)
+  parentId    String?
+  parent      ManualCategory? @relation("CategoryTree", fields: [parentId], references: [id])
+  children    ManualCategory[] @relation("CategoryTree")
+  articles    ManualArticle[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@unique([tenantId, slug])
+  @@map("manual_categories")
+}
+
+model ManualArticle {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  categoryId  String
+  category    ManualCategory @relation(fields: [categoryId], references: [id])
+  title       String
+  slug        String
+  content     String   @db.Text
+  contentHtml String?  @db.Text
+  version     Int      @default(1)
+  status      ManualArticleStatus @default(DRAFT)
+  isTemplate  Boolean  @default(false)
+  order       Int      @default(0)
+  metadata    Json?
+  createdBy   String?
+  updatedBy   String?
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  revisions   ManualRevision[]
+  acknowledgments ManualAcknowledgment[]
+  checklists  ManualChecklist[]
+  @@unique([tenantId, categoryId, slug])
+  @@map("manual_articles")
+}
+
+model ManualRevision {
+  id          String   @id @default(cuid())
+  articleId   String
+  article     ManualArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  version     Int
+  content     String   @db.Text
+  changeNote  String?
+  changedBy   String?
+  createdAt   DateTime @default(now())
+  @@map("manual_revisions")
+}
+
+model ManualAcknowledgment {
+  id          String   @id @default(cuid())
+  articleId   String
+  article     ManualArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  acknowledgedAt DateTime @default(now())
+  signature   String?  @db.Text
+  @@unique([articleId, employeeId])
+  @@map("manual_acknowledgments")
+}
+
+model ManualChecklist {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  articleId   String?
+  article     ManualArticle? @relation(fields: [articleId], references: [id])
+  name        String
+  description String?
+  frequency   ChecklistFrequency @default(ON_DEMAND)
+  items       ManualChecklistItem[]
+  executions  ManualChecklistExecution[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@map("manual_checklists")
+}
+
+model ManualChecklistItem {
+  id          String   @id @default(cuid())
+  checklistId String
+  checklist   ManualChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  text        String
+  order       Int      @default(0)
+  mandatory   Boolean  @default(true)
+  @@map("manual_checklist_items")
+}
+
+model ManualChecklistExecution {
+  id          String   @id @default(cuid())
+  checklistId String
+  checklist   ManualChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  executedBy  String
+  executedAt  DateTime @default(now())
+  items       Json
+  completionRate Float @default(0)
+  notes       String?
+  @@map("manual_checklist_executions")
 }

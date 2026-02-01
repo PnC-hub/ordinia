@@ -6,7 +6,7 @@ import { logAudit } from '@/lib/audit'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -23,11 +23,12 @@ export async function GET(
       return NextResponse.json({ error: 'Tenant non trovato' }, { status: 404 })
     }
 
-    const tenantId = user.tenantId || user.employee?.tenantId
+    const tenantId = (user.tenantId || user.employee?.tenantId) as string
+    const { id } = await params
 
     const entry = await prisma.timeEntry.findFirst({
       where: {
-        id: params.id,
+        id,
         tenantId,
       },
       include: {
@@ -64,7 +65,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -81,14 +82,15 @@ export async function PATCH(
       return NextResponse.json({ error: 'Tenant non trovato' }, { status: 404 })
     }
 
-    const tenantId = user.tenantId || user.employee?.tenantId
+    const tenantId = (user.tenantId || user.employee?.tenantId) as string
+    const { id } = await params
 
     const body = await request.json()
     const { status, managerNotes } = body
 
     const existingEntry = await prisma.timeEntry.findFirst({
       where: {
-        id: params.id,
+        id,
         tenantId,
       },
     })
@@ -98,7 +100,7 @@ export async function PATCH(
     }
 
     const entry = await prisma.timeEntry.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status,
         managerNotes,
@@ -138,7 +140,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -155,11 +157,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Tenant non trovato' }, { status: 404 })
     }
 
-    const tenantId = user.tenantId || user.employee?.tenantId
+    const tenantId = (user.tenantId || user.employee?.tenantId) as string
+    const { id } = await params
 
     const entry = await prisma.timeEntry.findFirst({
       where: {
-        id: params.id,
+        id,
         tenantId,
       },
     })
@@ -169,7 +172,7 @@ export async function DELETE(
     }
 
     await prisma.timeEntry.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     // Log audit

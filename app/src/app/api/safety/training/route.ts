@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { SafetyTrainingStatus } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   try {
@@ -105,15 +106,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Determina lo status
-    let status = 'NOT_STARTED'
+    let status: SafetyTrainingStatus = SafetyTrainingStatus.NOT_STARTED
     if (completedAt) {
       if (expiresAt && new Date(expiresAt) < new Date()) {
-        status = 'EXPIRED'
+        status = SafetyTrainingStatus.EXPIRED
       } else {
-        status = 'COMPLETED'
+        status = SafetyTrainingStatus.COMPLETED
       }
     } else if (startedAt) {
-      status = 'IN_PROGRESS'
+      status = SafetyTrainingStatus.IN_PROGRESS
     }
 
     const training = await prisma.safetyTraining.create({

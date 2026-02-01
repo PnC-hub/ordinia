@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, WhistleblowerType, WhistleblowingCategory, WhistleblowingStatus } from '@prisma/client'
 import { randomBytes } from 'crypto'
 
 const prisma = new PrismaClient()
@@ -27,14 +27,14 @@ async function main() {
   // Sample reports with different statuses
   const reports = [
     {
-      reporterType: 'ANONYMOUS',
-      category: 'SAFETY_VIOLATION',
+      reporterType: WhistleblowerType.ANONYMOUS,
+      category: WhistleblowingCategory.SAFETY_VIOLATION,
       title: 'Mancata fornitura DPI adeguati',
       description:
         'Nella sala sterilizzazione non vengono forniti i guanti adeguati per la manipolazione degli strumenti. Viene richiesto di utilizzare guanti sottili non conformi alle normative di sicurezza. Situazione in corso da circa 2 mesi.',
       personsInvolved: 'Responsabile della sterilizzazione',
       evidence: 'Foto dei guanti non conformi disponibili',
-      status: 'UNDER_INVESTIGATION',
+      status: WhistleblowingStatus.UNDER_INVESTIGATION,
       acknowledgedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
       investigationStartedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
       reportDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
@@ -54,17 +54,17 @@ async function main() {
       ],
     },
     {
-      reporterType: 'CONFIDENTIAL',
+      reporterType: WhistleblowerType.CONFIDENTIAL,
       reporterName: 'Maria Rossi',
       reporterEmail: 'maria.rossi.confidential@example.com',
       reporterRole: 'Igienista Dentale',
-      category: 'HARASSMENT',
+      category: WhistleblowingCategory.HARASSMENT,
       title: 'Comportamento inappropriato da parte del responsabile',
       description:
         'Il responsabile di reparto ha avuto comportamenti verbali inappropriati e commenti sessisti nei confronti di alcune colleghe. Gli episodi si sono verificati durante le riunioni settimanali. Altre colleghe possono confermare.',
       personsInvolved: 'Dr. [Nome omesso] - Responsabile clinica',
       evidence: 'Testimonianze di altre due colleghe disponibili',
-      status: 'ACKNOWLEDGED',
+      status: WhistleblowingStatus.ACKNOWLEDGED,
       acknowledgedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
       reportDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
       messages: [
@@ -77,19 +77,19 @@ async function main() {
       ],
     },
     {
-      reporterType: 'IDENTIFIED',
+      reporterType: WhistleblowerType.IDENTIFIED,
       reporterName: 'Giuseppe Bianchi',
       reporterEmail: 'giuseppe.bianchi@example.com',
       reporterPhone: '+39 320 1234567',
       reporterRole: 'Assistente alla poltrona',
-      category: 'FINANCIAL_IRREGULARITY',
+      category: WhistleblowingCategory.FINANCIAL_IRREGULARITY,
       title: 'Fatture false per forniture mai ricevute',
       description:
         'Ho notato che nell\'ultimo trimestre sono state registrate fatture per forniture odontoiatriche mai arrivate in studio. I prodotti fatturati (resine composite, anestetici) non corrispondono a quelli effettivamente utilizzati. Importo totale circa 5.000 euro.',
       personsInvolved: 'Responsabile acquisti e fornitore XYZ S.r.l.',
       evidence:
         'Copie delle fatture e registro prodotti in magazzino che non corrispondono',
-      status: 'CLOSED',
+      status: WhistleblowingStatus.CLOSED,
       acknowledgedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
       investigationStartedAt: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000),
       investigationCompletedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
@@ -126,26 +126,26 @@ async function main() {
       ],
     },
     {
-      reporterType: 'ANONYMOUS',
-      category: 'DATA_BREACH',
+      reporterType: WhistleblowerType.ANONYMOUS,
+      category: WhistleblowingCategory.DATA_BREACH,
       title: 'Cartelle cliniche lasciate incustodite',
       description:
         'Le cartelle cliniche dei pazienti vengono spesso lasciate aperte sui computer dello studio senza che nessuno effettui il logout. Chiunque può accedere ai dati sensibili dei pazienti.',
       personsInvolved: 'Segreteria e assistenti',
       evidence: null,
-      status: 'RECEIVED',
+      status: WhistleblowingStatus.RECEIVED,
       reportDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
       messages: [],
     },
     {
-      reporterType: 'ANONYMOUS',
-      category: 'DISCRIMINATION',
+      reporterType: WhistleblowerType.ANONYMOUS,
+      category: WhistleblowingCategory.DISCRIMINATION,
       title: 'Disparità di trattamento nelle assegnazioni turni',
       description:
         'Noto che i turni più scomodi (sera e sabato) vengono sistematicamente assegnati solo ad alcuni dipendenti, sempre gli stessi, mentre altri hanno sempre turni favorevoli. Non ci sono criteri oggettivi e trasparenti.',
       personsInvolved: 'Responsabile planning turni',
       evidence: 'Registro turni ultimi 6 mesi',
-      status: 'ADDITIONAL_INFO_REQUESTED',
+      status: WhistleblowingStatus.ADDITIONAL_INFO_REQUESTED,
       acknowledgedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
       investigationStartedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
       reportDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
@@ -165,17 +165,17 @@ async function main() {
       ],
     },
     {
-      reporterType: 'IDENTIFIED',
+      reporterType: WhistleblowerType.IDENTIFIED,
       reporterName: 'Laura Gialli',
       reporterEmail: 'laura.gialli@example.com',
       reporterRole: 'Amministrazione',
-      category: 'FRAUD',
+      category: WhistleblowingCategory.FRAUD,
       title: 'Ore di straordinario non pagate',
       description:
         'Negli ultimi 3 mesi ho effettuato circa 40 ore di straordinario che non sono state retribuite. Ho segnalato la cosa al responsabile ma non è stato fatto nulla. Le timbrature sono tutte registrate nel sistema.',
       personsInvolved: 'Responsabile HR e consulente del lavoro',
       evidence: 'Report timbrature e buste paga senza straordinari',
-      status: 'SUBSTANTIATED',
+      status: WhistleblowingStatus.SUBSTANTIATED,
       acknowledgedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
       investigationStartedAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000),
       investigationCompletedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),

@@ -48,6 +48,16 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
+    title: 'Manuale Operativo',
+    items: [
+      { href: '/manual', icon: '📖', label: 'Dashboard Manuale' },
+      { href: '/manual/search', icon: '🔍', label: 'Cerca' },
+      { href: '/manual/checklists', icon: '☑️', label: 'Checklist' },
+      { href: '/manual/acknowledgments', icon: '📋', label: 'Prese Visione' },
+      { href: '/manual/editor', icon: '✏️', label: 'Nuovo Articolo' },
+    ],
+  },
+  {
     title: 'AI & Guide',
     items: [
       { href: '/ai-assistant', icon: '🤖', label: 'Assistente AI' },

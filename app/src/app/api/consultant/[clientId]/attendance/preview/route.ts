@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma'
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { clientId: string } }
+  { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -19,11 +19,13 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { clientId } = await params
+
     // Verify consultant has access to this client
     const access = await prisma.consultantClient.findFirst({
       where: {
         consultantId: session.user.id,
-        tenantId: params.clientId,
+        tenantId: clientId,
         isActive: true,
       },
     })
@@ -55,7 +57,7 @@ export async function GET(
     // Get all active employees
     const employees = await prisma.employee.findMany({
       where: {
-        tenantId: params.clientId,
+        tenantId: clientId,
         status: 'ACTIVE',
       },
       select: {
@@ -73,7 +75,7 @@ export async function GET(
     // Get attendance data for period
     const timeEntries = await prisma.timeEntry.findMany({
       where: {
-        tenantId: params.clientId,
+        tenantId: clientId,
         date: {
           gte: dateStart,
           lte: dateEnd,
@@ -91,7 +93,7 @@ export async function GET(
     // Get leave requests for period
     const leaveRequests = await prisma.leaveRequest.findMany({
       where: {
-        tenantId: params.clientId,
+        tenantId: clientId,
         status: { in: ['APPROVED', 'IN_PROGRESS', 'COMPLETED'] },
         startDate: {
           lte: dateEnd,

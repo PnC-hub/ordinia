@@ -7,7 +7,7 @@ import { logAudit } from '@/lib/audit'
 // GET single payslip (download tracking)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -15,8 +15,10 @@ export async function GET(
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
     }
 
+    const { id } = await params
+
     const payslip = await prisma.payslip.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         employee: {
           select: {
@@ -51,7 +53,7 @@ export async function GET(
     // Track download if employee
     if (isEmployee && !payslip.downloadedAt) {
       await prisma.payslip.update({
-        where: { id: params.id },
+        where: { id },
         data: { downloadedAt: new Date() },
       })
     }
@@ -66,7 +68,7 @@ export async function GET(
 // PATCH - Mark as read/viewed
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -77,8 +79,10 @@ export async function PATCH(
     const body = await request.json()
     const { action } = body // 'mark_viewed' | 'mark_downloaded'
 
+    const { id } = await params
+
     const payslip = await prisma.payslip.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { employee: true },
     })
 
@@ -119,7 +123,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.payslip.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
     })
 
@@ -129,7 +133,7 @@ export async function PATCH(
       userId: user.id,
       action: 'READ',
       entityType: 'Payslip',
-      entityId: params.id,
+      entityId: id,
       details: { action, ip },
     })
 
@@ -143,7 +147,7 @@ export async function PATCH(
 // DELETE payslip
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -151,8 +155,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
     }
 
+    const { id } = await params
+
     const payslip = await prisma.payslip.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!payslip) {
@@ -170,7 +176,7 @@ export async function DELETE(
     }
 
     await prisma.payslip.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     // Log audit
@@ -179,7 +185,7 @@ export async function DELETE(
       userId: user.id,
       action: 'DELETE',
       entityType: 'Payslip',
-      entityId: params.id,
+      entityId: id,
       oldValue: payslip,
     })
 

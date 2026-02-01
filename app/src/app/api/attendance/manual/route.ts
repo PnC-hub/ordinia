@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Tenant non trovato' }, { status: 404 })
     }
 
-    const tenantId = user.tenantId || user.employee?.tenantId
+    const tenantId = (user.tenantId || user.employee?.tenantId) as string
 
     const body = await request.json()
     const { employeeId, date, clockIn, clockOut, breakMinutes, notes } = body

@@ -283,7 +283,7 @@ export default function WhistleblowingReportPage() {
                     type="email"
                     value={reporterEmail}
                     onChange={(e) => setReporterEmail(e.target.value)}
-                    required={reporterType !== 'ANONYMOUS'}
+                    required
                     className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
                 </div>

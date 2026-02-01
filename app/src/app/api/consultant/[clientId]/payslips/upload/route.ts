@@ -14,7 +14,7 @@ import path from 'path'
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { clientId: string } }
+  { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -23,11 +23,13 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { clientId } = await params
+
     // Verify consultant has access to this client
     const access = await prisma.consultantClient.findFirst({
       where: {
         consultantId: session.user.id,
-        tenantId: params.clientId,
+        tenantId: clientId,
         isActive: true,
       },
     })
@@ -52,7 +54,7 @@ export async function POST(
     // Get all employees
     const employees = await prisma.employee.findMany({
       where: {
-        tenantId: params.clientId,
+        tenantId: clientId,
         status: 'ACTIVE',
       },
       select: {
@@ -66,7 +68,7 @@ export async function POST(
     })
 
     // Create upload directory if not exists
-    const uploadDir = path.join(process.cwd(), 'uploads', 'payslips', params.clientId)
+    const uploadDir = path.join(process.cwd(), 'uploads', 'payslips', clientId)
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true })
     }
@@ -130,7 +132,7 @@ export async function POST(
         const filePath = path.join(uploadDir, fileName)
         await writeFile(filePath, buffer)
 
-        const fileUrl = `/uploads/payslips/${params.clientId}/${fileName}`
+        const fileUrl = `/uploads/payslips/${clientId}/${fileName}`
 
         // Check if payslip already exists for this period
         const existingPayslip = await prisma.payslip.findUnique({
@@ -159,7 +161,7 @@ export async function POST(
           await prisma.payslip.create({
             data: {
               employeeId,
-              tenantId: params.clientId,
+              tenantId: clientId,
               period,
               fileName,
               fileUrl,
@@ -174,7 +176,7 @@ export async function POST(
           await prisma.notification.create({
             data: {
               userId: employee.userId,
-              tenantId: params.clientId,
+              tenantId: clientId,
               type: 'PAYSLIP_AVAILABLE',
               title: 'Nuovo Cedolino Disponibile',
               message: `Il cedolino per il periodo ${period} è disponibile`,
@@ -186,7 +188,7 @@ export async function POST(
         // Log audit
         await prisma.auditLog.create({
           data: {
-            tenantId: params.clientId,
+            tenantId: clientId,
             userId: session.user.id,
             action: 'CREATE',
             entityType: 'Payslip',

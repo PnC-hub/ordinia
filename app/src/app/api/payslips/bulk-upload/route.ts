@@ -32,18 +32,21 @@ export async function POST(request: NextRequest) {
     // Get user
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
+      include: { employee: true },
     })
 
-    if (!user?.tenantId) {
-      return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 })
+    if (!user?.tenantId && !user?.employee?.tenantId) {
+      return NextResponse.json({ error: 'Tenant non trovato' }, { status: 404 })
     }
+
+    const tenantId = (user.tenantId || user.employee?.tenantId) as string
 
     // Verify all employees belong to tenant
     const employeeIds = payslips.map(p => p.employeeId)
     const employees = await prisma.employee.findMany({
       where: {
         id: { in: employeeIds },
-        tenantId: user.tenantId,
+        tenantId: tenantId,
       },
       select: {
         id: true,
@@ -88,7 +91,7 @@ export async function POST(request: NextRequest) {
       payslips.map(payslip =>
         prisma.payslip.create({
           data: {
-            tenantId: user.tenantId,
+            tenantId: tenantId,
             employeeId: payslip.employeeId,
             period,
             grossAmount: payslip.grossAmount || null,
@@ -104,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     // Log audit
     await logAudit({
-      tenantId: user.tenantId,
+      tenantId: tenantId,
       userId: user.id,
       action: 'CREATE',
       entityType: 'Payslip',
@@ -130,7 +133,7 @@ export async function POST(request: NextRequest) {
           const payslip = created.find(p => p.employeeId === emp.id)
           return prisma.notification.create({
             data: {
-              tenantId: user.tenantId,
+              tenantId: tenantId,
               userId: emp.userId!,
               type: 'PAYSLIP_AVAILABLE',
               title: 'Nuova busta paga disponibile',
