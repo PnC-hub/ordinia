@@ -42,8 +42,8 @@ export default function DvrPage() {
     async function fetchData() {
       try {
         const [docsRes, acksRes] = await Promise.all([
+          fetch('/api/dvr/documents'),
           fetch('/api/dvr'),
-          fetch('/api/dvr/acknowledgments'),
         ])
 
         if (docsRes.ok) {
@@ -53,7 +53,28 @@ export default function DvrPage() {
 
         if (acksRes.ok) {
           const acksData = await acksRes.json()
-          setAcknowledgments(acksData)
+          // Transform acknowledgments data to match expected interface
+          const transformedAcks = acksData.map((ack: {
+            id: string
+            dvrVersion: string
+            acknowledgedAt: string | null
+            signature: string | null
+            employee: {
+              id: string
+              firstName: string
+              lastName: string
+              department: string | null
+            }
+          }) => ({
+            id: ack.id,
+            documentTitle: 'DVR',
+            documentVersion: ack.dvrVersion,
+            acknowledgedAt: ack.acknowledgedAt,
+            signedAt: ack.signature ? ack.acknowledgedAt : null,
+            signaturePath: ack.signature,
+            employee: ack.employee,
+          }))
+          setAcknowledgments(transformedAcks)
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Errore sconosciuto')

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { Decimal } from '@prisma/client/runtime/library'
 
 type Document = {
@@ -186,7 +187,40 @@ export default function EmployeeDetailTabs({
   disciplinaryProcedures,
   notes
 }: Props) {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('documents')
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [uploadingDoc, setUploadingDoc] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleUploadDocument = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setUploadingDoc(true)
+    setUploadError('')
+
+    const formData = new FormData(e.currentTarget)
+    formData.append('employeeId', employee.id)
+
+    try {
+      const res = await fetch('/api/employees/documents', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!res.ok) {
+        const result = await res.json()
+        throw new Error(result.error || 'Errore durante il caricamento')
+      }
+
+      setShowUploadModal(false)
+      router.refresh()
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Errore sconosciuto')
+    } finally {
+      setUploadingDoc(false)
+    }
+  }
 
   return (
     <div className="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700">
@@ -236,7 +270,10 @@ export default function EmployeeDetailTabs({
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Documenti Firmati
               </h3>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              >
                 + Carica Documento
               </button>
             </div>
@@ -580,6 +617,114 @@ export default function EmployeeDetailTabs({
           </div>
         )}
       </div>
+
+      {/* Upload Document Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Carica Documento
+              </h3>
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {uploadError && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
+                {uploadError}
+              </div>
+            )}
+
+            <form onSubmit={handleUploadDocument} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Nome Documento *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  placeholder="es. Contratto di lavoro"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-zinc-700 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Tipo Documento *
+                </label>
+                <select
+                  name="type"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-zinc-700 dark:text-white"
+                >
+                  <option value="CONTRACT">Contratto</option>
+                  <option value="ID_DOCUMENT">Documento Identità</option>
+                  <option value="TRAINING_CERTIFICATE">Attestato Formazione</option>
+                  <option value="MEDICAL_CERTIFICATE">Certificato Medico</option>
+                  <option value="DPI_RECEIPT">Ricevuta DPI</option>
+                  <option value="PAYSLIP">Busta Paga</option>
+                  <option value="DISCIPLINARY">Disciplinare</option>
+                  <option value="GDPR_CONSENT">Consenso GDPR</option>
+                  <option value="OTHER">Altro</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  File *
+                </label>
+                <input
+                  type="file"
+                  name="file"
+                  ref={fileInputRef}
+                  required
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-zinc-700 dark:text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  PDF, DOC, DOCX, JPG, PNG (max 10MB)
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Data Scadenza
+                </label>
+                <input
+                  type="date"
+                  name="expiresAt"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-zinc-700 dark:text-white"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-zinc-700">
+                <button
+                  type="button"
+                  onClick={() => setShowUploadModal(false)}
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  disabled={uploadingDoc}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {uploadingDoc ? 'Caricamento...' : 'Carica'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

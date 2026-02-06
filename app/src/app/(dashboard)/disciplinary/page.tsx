@@ -128,7 +128,7 @@ export default function DisciplinaryPage() {
           />
         </div>
         <Link
-          href="/disciplinary/new"
+          href="/disciplinary/procedures/new"
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
           + Nuova Procedura

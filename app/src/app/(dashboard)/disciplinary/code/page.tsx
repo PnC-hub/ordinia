@@ -5,20 +5,16 @@ import Link from 'next/link'
 
 interface DisciplinaryCode {
   id: string
+  tenantId: string
   version: string
-  title: string
   content: string
-  effectiveFrom: string
   postedAt: string | null
+  postedBy: string | null
   postedLocation: string | null
-  postedPhotoPath: string | null
-  notifiedViaEmail: boolean
-  emailNotifiedAt: string | null
+  photoPath: string | null
   isActive: boolean
   createdAt: string
-  _count: {
-    acknowledgments: number
-  }
+  updatedAt: string
 }
 
 interface CodeAcknowledgment {
@@ -50,12 +46,18 @@ export default function DisciplinaryCodePage() {
 
         if (codesRes.ok) {
           const codesData = await codesRes.json()
-          setCodes(codesData)
+          // L'API restituisce un singolo oggetto o null, converti in array
+          if (codesData) {
+            setCodes([codesData])
+          } else {
+            setCodes([])
+          }
         }
 
         if (acksRes.ok) {
           const acksData = await acksRes.json()
-          setAcknowledgments(acksData)
+          // Verifica che sia un array
+          setAcknowledgments(Array.isArray(acksData) ? acksData : [])
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Errore sconosciuto')
@@ -118,20 +120,20 @@ export default function DisciplinaryCodePage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {activeCode.title}
+                    Codice Disciplinare v{activeCode.version}
                   </h2>
                   <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
                     Attivo
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Versione {activeCode.version} - In vigore dal {formatDate(activeCode.effectiveFrom)}
+                  Versione {activeCode.version} - Creato il {formatDate(activeCode.createdAt)}
                 </p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {activeCode._count.acknowledgments}
+                {acknowledgments.length}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">Prese visione</p>
             </div>
@@ -161,30 +163,14 @@ export default function DisciplinaryCodePage() {
             </div>
             <div className="flex items-center gap-3">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                activeCode.postedPhotoPath ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                activeCode.photoPath ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
               }`}>
-                {activeCode.postedPhotoPath ? '✓' : '○'}
+                {activeCode.photoPath ? '✓' : '○'}
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">Foto Affissione</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {activeCode.postedPhotoPath ? 'Documentata' : 'Non caricata'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                activeCode.notifiedViaEmail ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-              }`}>
-                {activeCode.notifiedViaEmail ? '✓' : '○'}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">Notifica Email</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {activeCode.notifiedViaEmail
-                    ? `Inviata ${formatDateTime(activeCode.emailNotifiedAt)}`
-                    : 'Non inviata'
-                  }
+                  {activeCode.photoPath ? 'Documentata' : 'Non caricata'}
                 </p>
               </div>
             </div>
@@ -250,16 +236,10 @@ export default function DisciplinaryCodePage() {
                     Versione
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                    Titolo
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                    In Vigore Dal
+                    Data Creazione
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Affissione
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                    Prese Visione
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Stato
@@ -269,7 +249,7 @@ export default function DisciplinaryCodePage() {
               <tbody className="divide-y divide-gray-200 dark:divide-zinc-700">
                 {codes.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
                       Nessun codice disciplinare caricato
                     </td>
                   </tr>
@@ -279,11 +259,8 @@ export default function DisciplinaryCodePage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                         v{code.version}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {code.title}
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {formatDate(code.effectiveFrom)}
+                        {formatDate(code.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {code.postedAt ? (
@@ -293,9 +270,6 @@ export default function DisciplinaryCodePage() {
                         ) : (
                           <span className="text-gray-400">Non affisso</span>
                         )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {code._count.acknowledgments}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span

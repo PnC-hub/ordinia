@@ -84,6 +84,7 @@ model User {
   employeeInvitesSent   EmployeeInvite[]           @relation("EmployeeInviter")
   notifications         Notification[]
   employee              Employee?                  @relation("UserEmployee") // Profilo dipendente collegato
+  dvrDocumentsUploaded  DvrDocument[]              @relation("DvrUploader")
 }
 
 enum UserRole {
@@ -132,6 +133,7 @@ model Tenant {
 
   // Sicurezza lavoro D.Lgs. 81/2008
   safetyTrainings    SafetyTraining[]
+  dvrDocuments       DvrDocument[]
   dvrAcknowledgments DvrAcknowledgment[]
 
   // Procedura disciplinare Art. 7 L. 300/1970
@@ -714,10 +716,41 @@ enum SafetyTrainingStatus {
 }
 
 // DVR - Documento Valutazione Rischi
+model DvrDocument {
+  id         String @id @default(cuid())
+  tenantId   String
+
+  title       String   // Titolo documento (es. "DVR - Documento Valutazione Rischi 2026")
+  version     String   // Versione (es. "1.0", "2.0")
+  description String?  @db.Text // Descrizione opzionale
+
+  filePath  String  // Path file PDF
+  fileName  String  // Nome originale file
+  fileSize  Int?    // Dimensione file in bytes
+
+  validFrom  DateTime  // Data inizio validità
+  validUntil DateTime? // Data fine validità (opzionale)
+
+  isActive Boolean @default(true) // Se è il documento attivo corrente
+
+  uploadedBy String // User ID di chi ha caricato
+  uploader   User   @relation("DvrUploader", fields: [uploadedBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  acknowledgments DvrAcknowledgment[]
+
+  @@index([tenantId])
+  @@index([isActive])
+}
+
 model DvrAcknowledgment {
   id         String @id @default(cuid())
   tenantId   String
   employeeId String
+  documentId String? // Riferimento al documento DVR (opzionale per retrocompatibilità)
 
   dvrVersion String // Versione DVR (es. "1.0 - Gennaio 2025")
   dvrDate    DateTime // Data documento DVR
@@ -731,11 +764,13 @@ model DvrAcknowledgment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  document DvrDocument? @relation(fields: [documentId], references: [id], onDelete: SetNull)
 
   @@unique([employeeId, dvrVersion])
   @@index([tenantId])
+  @@index([documentId])
 }
 
 // ============================================
