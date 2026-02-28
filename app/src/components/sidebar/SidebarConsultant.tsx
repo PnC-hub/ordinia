@@ -96,7 +96,7 @@ export default function SidebarConsultant({
     },
     {
       title: 'AI Powered',
-      items: [{ href: '/consultant/ai-assistant', icon: '🤖', label: 'Assistente AI' }],
+      items: [{ href: '/consultant/ai-assistant', icon: '🧠', label: 'Brain AI' }],
     },
     {
       title: 'Account',

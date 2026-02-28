@@ -61,7 +61,7 @@ const menuSections: MenuSection[] = [
   {
     title: 'AI & Guide',
     items: [
-      { href: '/ai-assistant', icon: '🤖', label: 'Assistente AI' },
+      { href: '/ai-assistant', icon: '🧠', label: 'Brain AI' },
       { href: '/tutorials', icon: '📚', label: 'Centro Formazione' },
     ],
   },
