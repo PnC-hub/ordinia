@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { message, conversationId, mode } = body
+    const { message, conversationId, mode } = body as { message?: string; conversationId?: string; mode?: string }
 
     if (!message?.trim()) {
       return NextResponse.json({ error: 'Messaggio richiesto' }, { status: 400 })
@@ -58,12 +58,14 @@ export async function POST(request: NextRequest) {
     const context = await buildBrainContext(session.user.id, tenantId)
 
     const recentHistory = conversation.messages.slice(-BRAIN_MAX_HISTORY)
+    // mode='manual' activates protocol dictation - open to all authenticated users (UI restricts to admins)
+    const systemPrefix = mode === 'manual' ? 'MODALITÀ: DETTATURA PROTOCOLLO\n\n' : ''
+    const systemContent = `${systemPrefix}${BRAIN_SYSTEM_PROMPT}\n\n## Dati Reali Aziendali\n${context.report}`
+
     const gptMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
       {
         role: 'system',
-        content: mode === 'manual'
-          ? `MODALITÀ: DETTATURA PROTOCOLLO\n\n${BRAIN_SYSTEM_PROMPT}\n\n## Dati Reali Aziendali\n${context.report}`
-          : `${BRAIN_SYSTEM_PROMPT}\n\n## Dati Reali Aziendali\n${context.report}`,
+        content: systemContent,
       },
       ...recentHistory
         .filter((m) => m.role === 'user' || m.role === 'assistant')
