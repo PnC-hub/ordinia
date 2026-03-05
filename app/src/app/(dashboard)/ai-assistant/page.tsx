@@ -1,8 +1,12 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import BrainDrawer, { type BrainMsg, type BrainConv } from '@/components/brain/BrainDrawer'
+import { useSession } from 'next-auth/react'
+import BrainDrawer, { type BrainMsg, type BrainConv, type ManualDraft } from '@/components/brain/BrainDrawer'
 
 export default function BrainAIPage() {
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'OWNER'
+
   const [isOpen, setIsOpen] = useState(true)
   const [messages, setMessages] = useState<BrainMsg[]>([])
   const [conversations, setConversations] = useState<BrainConv[]>([])
@@ -44,7 +48,7 @@ export default function BrainAIPage() {
     setError(null)
   }
 
-  async function handleSend() {
+  async function handleSend(opts?: { mode?: string }) {
     const text = input.trim()
     if (!text || loading) return
 
@@ -64,7 +68,7 @@ export default function BrainAIPage() {
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, conversationId: currentConvId }),
+        body: JSON.stringify({ message: text, conversationId: currentConvId, mode: opts?.mode }),
       })
 
       const data = await res.json()
@@ -91,6 +95,27 @@ export default function BrainAIPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleManualSave(draft: ManualDraft) {
+    const res = await fetch('/api/ai/manual-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(draft),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      throw new Error(data.error ?? 'Errore durante il salvataggio')
+    }
+    setMessages(prev => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: 'assistant' as const,
+        content: `✅ Salvato nel manuale!\n\n**${data.article.title}** aggiunto alla categoria **${data.article.categoryName}**.\n\nVisibile in [Manuale Aziendale](/manual).`,
+        timestamp: new Date(),
+      }
+    ])
   }
 
   return (
@@ -122,6 +147,8 @@ export default function BrainAIPage() {
         onNewConversation={newConversation}
         onLoadConversation={loadConversation}
         onDeleteConversation={deleteConversation}
+        isAdmin={isAdmin}
+        onManualSave={handleManualSave}
       />
     </div>
   )
