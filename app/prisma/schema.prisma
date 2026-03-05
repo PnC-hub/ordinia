@@ -85,9 +85,7 @@ model User {
   notifications         Notification[]
   employee              Employee?                  @relation("UserEmployee") // Profilo dipendente collegato
   dvrDocumentsUploaded  DvrDocument[]              @relation("DvrUploader")
-
-  // AI Training
-  trainingConversations TrainingConversation[]
+  brainConversations BrainConversation[]
 }
 
 enum UserRole {
@@ -177,11 +175,6 @@ model Tenant {
   manualArticles     ManualArticle[]
   manualChecklists   ManualChecklist[]
   feedbacks          Feedback[]
-
-  // AI Training
-  trainingConversations TrainingConversation[]
-  trainingCorrections   TrainingCorrection[]
-  aiRules               AIRule[]
 }
 
 enum Plan {
@@ -2180,114 +2173,6 @@ model ManualChecklistExecution {
 
 
 // ============================================
-// AI TRAINING SYSTEM
-// ============================================
-
-model TrainingConversation {
-  id            String   @id @default(cuid())
-  tenantId      String
-  tenant        Tenant   @relation(fields: [tenantId], references: [id])
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
-  context       String   // modulo: attendance, payslip, safety, onboarding, leaves, expenses, disciplinary
-  contextId     String?  // ID entità correlata (employeeId, requestId, etc.)
-  contextData   Json?    // Dati contestuali per il training
-  status        TrainingStatus @default(ACTIVE)
-  title         String?
-  summary       String?  @db.Text // Riassunto generato da AI
-  messages      TrainingMessage[]
-  corrections   TrainingCorrection[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  @@map("training_conversations")
-}
-
-model TrainingMessage {
-  id              String   @id @default(cuid())
-  conversationId  String
-  conversation    TrainingConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  role            MessageRole
-  content         String   @db.Text
-  functionCall    Json?    // Per function calling GPT-4
-  functionResult  Json?    // Risultato della function call
-  tokens          Int?     // Token utilizzati
-  createdAt       DateTime @default(now())
-  @@map("training_messages")
-}
-
-model TrainingCorrection {
-  id              String   @id @default(cuid())
-  conversationId  String
-  conversation    TrainingConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id])
-  module          String   // Modulo di applicazione
-  entityType      String?  // Tipo entità (Employee, TimeEntry, etc.)
-  entityId        String?  // ID entità corretta
-  originalValue   Json     // Valore originale
-  correctedValue  Json     // Valore corretto
-  fieldPath       String?  // Path del campo corretto (es. "status", "hours")
-  ruleExtracted   String?  @db.Text // Regola estratta dalla correzione
-  applied         Boolean  @default(false)
-  appliedAt       DateTime?
-  createdAt       DateTime @default(now())
-  @@map("training_corrections")
-}
-
-model AIRule {
-  id            String   @id @default(cuid())
-  tenantId      String
-  tenant        Tenant   @relation(fields: [tenantId], references: [id])
-  module        String   // Modulo di applicazione
-  name          String   // Nome descrittivo della regola
-  condition     String   @db.Text // Condizione in linguaggio naturale
-  conditionJson Json?    // Condizione strutturata per matching
-  action        String   @db.Text // Azione da eseguire
-  actionJson    Json?    // Azione strutturata
-  priority      Int      @default(0) // Priorità (maggiore = eseguita prima)
-  confidence    Float    @default(0.5)
-  usageCount    Int      @default(0)
-  successCount  Int      @default(0)
-  failureCount  Int      @default(0)
-  lastUsedAt    DateTime?
-  isActive      Boolean  @default(true)
-  createdBy     String?  // userId che ha creato la regola
-  sourceConversationId String? // Conversazione da cui è stata estratta
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  @@map("ai_rules")
-}
-
-model AIRuleApplication {
-  id            String   @id @default(cuid())
-  ruleId        String
-  tenantId      String
-  module        String
-  entityType    String
-  entityId      String
-  inputData     Json     // Dati di input
-  outputData    Json     // Dati di output
-  success       Boolean
-  feedback      String?  // Feedback utente (approved, rejected)
-  feedbackNote  String?
-  appliedAt     DateTime @default(now())
-  @@map("ai_rule_applications")
-}
-
-enum TrainingStatus {
-  ACTIVE
-  RESOLVED
-  ARCHIVED
-}
-
-enum MessageRole {
-  USER
-  ASSISTANT
-  SYSTEM
-  FUNCTION
-}
-
-// ============================================
 // FEEDBACK & SUPPORT
 // ============================================
 
@@ -2312,3 +2197,31 @@ model Feedback {
   @@map("feedbacks")
 }
 
+
+
+// ============================================
+// BRAIN AI
+// ============================================
+
+model BrainConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  tenantId  String?
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages BrainMessage[]
+}
+
+model BrainMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String
+  content        String   @db.Text
+  contextData    Json?
+  createdAt      DateTime @default(now())
+
+  conversation BrainConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
