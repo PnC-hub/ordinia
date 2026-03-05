@@ -13,7 +13,6 @@ export async function buildBrainContext(
   const today = new Date()
   const in30Days = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
 
-  // Query parallele su dati Ordinia
   const [
     employeesResult,
     deadlinesResult,
@@ -22,6 +21,7 @@ export async function buildBrainContext(
     manualsResult,
     checklistsResult,
     disciplinaryResult,
+    manualArticlesResult,
   ] = await Promise.allSettled([
     // 1. Dipendenti attivi
     prisma.employee.findMany({
@@ -39,7 +39,7 @@ export async function buildBrainContext(
       orderBy: { lastName: 'asc' },
     }),
 
-    // 2. Scadenze urgenti (entro 30 giorni)
+    // 2. Scadenze urgenti
     prisma.deadline.findMany({
       where: {
         ...(tenantId ? { tenantId } : {}),
@@ -61,7 +61,7 @@ export async function buildBrainContext(
       take: 20,
     }),
 
-    // 4. Formazioni sicurezza in scadenza (campo: expiresAt)
+    // 4. Formazioni sicurezza in scadenza
     prisma.safetyTraining.findMany({
       where: {
         ...(tenantId ? { tenantId } : {}),
@@ -78,7 +78,7 @@ export async function buildBrainContext(
       take: 20,
     }),
 
-    // 5. Categorie manuali
+    // 5. Categorie manuali (conteggio)
     prisma.manualCategory.findMany({
       where: tenantId ? { tenantId } : {},
       select: {
@@ -88,7 +88,7 @@ export async function buildBrainContext(
       take: 20,
     }),
 
-    // 6. Checklist recenti (campo: name, non title)
+    // 6. Checklist
     prisma.manualChecklist.findMany({
       where: tenantId ? { tenantId } : {},
       select: {
@@ -99,8 +99,6 @@ export async function buildBrainContext(
     }),
 
     // 7. Procedure disciplinari aperte
-    // DisciplinaryStatus validi: DRAFT, CONTESTATION_SENT, AWAITING_DEFENSE,
-    //   DEFENSE_RECEIVED, HEARING_SCHEDULED, PENDING_DECISION, SANCTION_ISSUED, APPEALED, CLOSED
     prisma.disciplinaryProcedure.findMany({
       where: {
         ...(tenantId ? { tenantId } : {}),
@@ -118,6 +116,25 @@ export async function buildBrainContext(
       select: { infractionType: true, status: true, createdAt: true },
       take: 10,
     }),
+
+    // 8. Articoli manuale con contenuto completo
+    prisma.manualArticle.findMany({
+      where: {
+        ...(tenantId ? { tenantId } : {}),
+        status: 'PUBLISHED',
+      },
+      select: {
+        title: true,
+        content: true,
+        category: { select: { name: true } },
+        updatedAt: true,
+      },
+      orderBy: [
+        { category: { order: 'asc' } },
+        { order: 'asc' },
+      ],
+      take: 50,
+    }),
   ])
 
   const extract = <T>(r: PromiseSettledResult<T>): T | null =>
@@ -130,71 +147,100 @@ export async function buildBrainContext(
   const manualCategories = extract(manualsResult) ?? []
   const checklists = extract(checklistsResult) ?? []
   const disciplinary = extract(disciplinaryResult) ?? []
+  const manualArticles = extract(manualArticlesResult) ?? []
 
   const sections: string[] = []
 
-  sections.push(
-    
-  )
-
+  // --- Dipendenti ---
   if (employees.length > 0) {
-    sections.push()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sections.push(`\n## DIPENDENTI ATTIVI (${employees.length})`)
     employees.slice(0, 20).forEach((e: any) => {
-      sections.push(
-        
-      )
-    })
-  }
-
-  if (deadlines.length > 0) {
-    sections.push()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    deadlines.forEach((d: any) => {
-      const giorni = Math.ceil(
-        (new Date(d.dueDate).getTime() - today.getTime()) / 86400000
-      )
-      sections.push(
-        
-      )
-    })
-  }
-
-  if (signatures.length > 0) {
-    sections.push()
-  }
-
-  if (safetyTrainings.length > 0) {
-    sections.push()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    safetyTrainings.forEach((t: any) => {
-      const scadenza = t.expiresAt
-        ? new Date(t.expiresAt).toLocaleDateString('it-IT')
+      const hired = e.hireDate
+        ? new Date(e.hireDate).toLocaleDateString('it-IT')
         : 'N/D'
       sections.push(
-        
+        `- ${e.lastName} ${e.firstName} | ${e.jobTitle ?? 'N/D'} | ${e.department ?? 'N/D'} | Assunto: ${hired} | Contratto: ${e.contractType ?? 'N/D'} ${e.ccnlLevel ? '| Livello: ' + e.ccnlLevel : ''}`
       )
     })
   }
 
+  // --- Scadenze ---
+  if (deadlines.length > 0) {
+    sections.push(`\n## SCADENZE URGENTI (entro 30 giorni)`)
+    deadlines.forEach((d: any) => {
+      const due = new Date(d.dueDate).toLocaleDateString('it-IT')
+      sections.push(`- [${d.status}] ${d.title} — scade ${due} (${d.type})`)
+    })
+  }
+
+  // --- Firme pendenti ---
+  if (signatures.length > 0) {
+    sections.push(`\n## FIRME DOCUMENTI PENDENTI (${signatures.length})`)
+    signatures.forEach((s: any) => {
+      const req = new Date(s.requestedAt).toLocaleDateString('it-IT')
+      const due = s.dueDate ? new Date(s.dueDate).toLocaleDateString('it-IT') : 'N/D'
+      sections.push(`- Documento ID: ${s.documentId} | Richiesto: ${req} | Scadenza: ${due}`)
+    })
+  }
+
+  // --- Sicurezza ---
+  if (safetyTrainings.length > 0) {
+    sections.push(`\n## FORMAZIONI SICUREZZA IN SCADENZA`)
+    safetyTrainings.forEach((t: any) => {
+      const exp = t.expiresAt
+        ? new Date(t.expiresAt).toLocaleDateString('it-IT')
+        : 'N/D'
+      const name = t.employee
+        ? `${t.employee.lastName} ${t.employee.firstName}`
+        : 'N/D'
+      sections.push(`- ${name}: "${t.title}" (${t.trainingType}) — scade ${exp} [${t.status}]`)
+    })
+  }
+
+  // --- Struttura manuale ---
   if (manualCategories.length > 0) {
-    sections.push()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sections.push(`\n## STRUTTURA MANUALE AZIENDALE`)
     manualCategories.forEach((c: any) => {
-      sections.push()
+      sections.push(`- ${c.name}: ${c._count.articles} articoli`)
     })
   }
 
+  // --- Contenuto articoli manuale ---
+  if (manualArticles.length > 0) {
+    sections.push(`\n## CONTENUTO MANUALE AZIENDALE (Protocolli e Regole)`)
+
+    const byCategory = new Map<string, any[]>()
+    for (const art of manualArticles as any[]) {
+      const catName = art.category?.name ?? 'Generale'
+      if (!byCategory.has(catName)) byCategory.set(catName, [])
+      byCategory.get(catName)!.push(art)
+    }
+
+    byCategory.forEach((articles, catName) => {
+      sections.push(`\n### ${catName}`)
+      articles.forEach((art: any) => {
+        const updated = new Date(art.updatedAt).toLocaleDateString('it-IT')
+        sections.push(`\n#### ${art.title} (aggiornato: ${updated})`)
+        sections.push(art.content)
+      })
+    })
+  }
+
+  // --- Checklist ---
   if (checklists.length > 0) {
-    sections.push()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sections.push(`\n## CHECKLIST OPERATIVE`)
     checklists.forEach((c: any) => {
-      sections.push()
+      sections.push(`- ${c.name}: ${c._count.executions} esecuzioni completate`)
     })
   }
 
+  // --- Disciplinare ---
   if (disciplinary.length > 0) {
-    sections.push()
+    sections.push(`\n## PROCEDURE DISCIPLINARI APERTE (${disciplinary.length})`)
+    disciplinary.forEach((d: any) => {
+      const date = new Date(d.createdAt).toLocaleDateString('it-IT')
+      sections.push(`- [${d.status}] ${d.infractionType} — aperta il ${date}`)
+    })
   }
 
   const rawData = {
@@ -205,6 +251,7 @@ export async function buildBrainContext(
     manualCategories,
     checklists,
     disciplinary,
+    manualArticles,
   }
 
   return { report: sections.join('\n'), rawData }
