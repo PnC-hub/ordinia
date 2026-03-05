@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       uniqueArticleSlug = `${baseArticleSlug}-${articleAttempt}`
     }
     if (articleAttempt >= MAX_SLUG_ATTEMPTS) {
-      return NextResponse.json({ error: 'Impossibile generare slug univoco per l'articolo' }, { status: 409 })
+      return NextResponse.json({ error: `Impossibile generare slug univoco per l'articolo` }, { status: 409 })
     }
 
     const article = await prisma.manualArticle.create({
