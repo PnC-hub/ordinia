@@ -17,6 +17,13 @@ export interface BrainConv {
   updatedAt: string
 }
 
+export interface ManualDraft {
+  type: 'manual_draft'
+  categoryName: string
+  title: string
+  content: string
+}
+
 interface BrainDrawerProps {
   isOpen: boolean
   onClose: () => void
@@ -27,10 +34,12 @@ interface BrainDrawerProps {
   error: string | null
   input: string
   onInputChange: (v: string) => void
-  onSend: () => void
+  onSend: (opts?: { mode?: string }) => void
   onNewConversation: () => void
   onLoadConversation: (id: string) => void
   onDeleteConversation: (id: string) => void
+  onManualSave?: (draft: ManualDraft) => Promise<void>
+  isAdmin?: boolean
 }
 
 const SUGGESTIONS = [
@@ -42,12 +51,32 @@ const SUGGESTIONS = [
   'Obblighi D.Lgs 81/08 per il mio settore',
 ]
 
+function parseManualDraft(content: string): ManualDraft | null {
+  try {
+    const parsed = JSON.parse(content)
+    if (
+      parsed?.type === 'manual_draft' &&
+      typeof parsed.categoryName === 'string' &&
+      typeof parsed.title === 'string' &&
+      typeof parsed.content === 'string'
+    ) {
+      return parsed as ManualDraft
+    }
+  } catch {
+    // not JSON
+  }
+  return null
+}
+
 export default function BrainDrawer({
   isOpen, onClose, messages, conversations, currentConvId,
   loading, error, input, onInputChange, onSend,
   onNewConversation, onLoadConversation, onDeleteConversation,
+  onManualSave, isAdmin = false,
 }: BrainDrawerProps) {
   const [showHistory, setShowHistory] = useState(false)
+  const [manualMode, setManualMode] = useState(false)
+  const [savingDraft, setSavingDraft] = useState(false)
   const messagesRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -55,6 +84,31 @@ export default function BrainDrawer({
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight
     }
   }, [messages, loading])
+
+  // Parse last assistant message for manual draft
+  const lastAssistant = messages.filter((m) => m.role === 'assistant').at(-1)
+  const manualDraft = manualMode && lastAssistant
+    ? parseManualDraft(lastAssistant.content)
+    : null
+
+  const handleSend = () => {
+    onSend(manualMode ? { mode: 'manual' } : undefined)
+  }
+
+  const handleManualSave = async () => {
+    if (!manualDraft || !onManualSave) return
+    setSavingDraft(true)
+    try {
+      await onManualSave(manualDraft)
+      setManualMode(false)
+    } finally {
+      setSavingDraft(false)
+    }
+  }
+
+  const handleToggleManual = () => {
+    setManualMode(!manualMode)
+  }
 
   if (!isOpen) return null
 
@@ -78,7 +132,21 @@ export default function BrainDrawer({
               🧠
             </div>
             <div>
-              <h3 className="font-bold text-base">Brain AI</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-base">Brain AI</h3>
+                {isAdmin && (
+                  <button
+                    onClick={handleToggleManual}
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                      manualMode
+                        ? 'bg-emerald-400 text-emerald-900'
+                        : 'bg-white/20 text-white hover:bg-white/30'
+                    }`}
+                  >
+                    📖 Manuale
+                  </button>
+                )}
+              </div>
               <p className="text-violet-200 text-xs">HR &amp; Sicurezza Assistant</p>
             </div>
           </div>
@@ -105,6 +173,15 @@ export default function BrainDrawer({
             </button>
           </div>
         </div>
+
+        {/* Manual Mode Banner */}
+        {manualMode && (
+          <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 border-b border-emerald-200 dark:border-emerald-700 flex-shrink-0">
+            <p className="text-sm text-emerald-700 dark:text-emerald-300">
+              📖 <strong>Modalità Manuale attiva</strong> — Dimmi la regola o il protocollo da aggiungere.
+            </p>
+          </div>
+        )}
 
         {/* History Panel */}
         {showHistory && (
@@ -187,11 +264,45 @@ export default function BrainDrawer({
           )}
         </div>
 
+        {/* Manual Draft Card */}
+        {manualDraft && (
+          <div className="mx-4 mb-3 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-700 flex-shrink-0">
+            <p className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2 text-sm">
+              📝 Bozza articolo pronta
+            </p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-1">
+              <span className="font-medium">Categoria:</span> {manualDraft.categoryName}
+            </p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2">
+              <span className="font-medium">Titolo:</span> {manualDraft.title}
+            </p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3 line-clamp-3">
+              {manualDraft.content}
+            </p>
+            <div className="flex gap-2">
+              <button
+                disabled={savingDraft}
+                onClick={handleManualSave}
+                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg font-medium disabled:opacity-50 transition-colors"
+              >
+                {savingDraft ? 'Salvataggio...' : '✅ Salva nel Manuale'}
+              </button>
+              <button
+                onClick={() => window.open('/manual', '_blank')}
+                className="px-3 py-2 border border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 text-sm rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                title="Apri il Manuale"
+              >
+                ✏️
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Input */}
         <BrainInput
           value={input}
           onChange={onInputChange}
-          onSend={onSend}
+          onSend={handleSend}
           loading={loading}
           error={error}
         />
