@@ -1,6 +1,8 @@
 // src/lib/brain/brainContext.ts
 import { prisma } from '@/lib/prisma'
 
+const MAX_ARTICLE_CHARS = 1500
+
 export interface BrainContext {
   report: string
   rawData: Record<string, unknown>
@@ -221,7 +223,10 @@ export async function buildBrainContext(
       articles.forEach((art: any) => {
         const updated = new Date(art.updatedAt).toLocaleDateString('it-IT')
         sections.push(`\n#### ${art.title} (aggiornato: ${updated})`)
-        sections.push(art.content)
+        const truncated = art.content.length > MAX_ARTICLE_CHARS
+          ? art.content.slice(0, MAX_ARTICLE_CHARS) + '… [troncato]'
+          : art.content
+        sections.push(truncated)
       })
     })
   }
