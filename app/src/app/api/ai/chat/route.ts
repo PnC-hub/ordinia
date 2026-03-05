@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { message, conversationId } = body
+    const { message, conversationId, mode } = body
 
     if (!message?.trim()) {
       return NextResponse.json({ error: 'Messaggio richiesto' }, { status: 400 })
@@ -61,7 +61,9 @@ export async function POST(request: NextRequest) {
     const gptMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
       {
         role: 'system',
-        content: `${BRAIN_SYSTEM_PROMPT}\n\n## Dati Reali Aziendali\n${context.report}`,
+        content: mode === 'manual'
+          ? `MODALITÀ: DETTATURA PROTOCOLLO\n\n${BRAIN_SYSTEM_PROMPT}\n\n## Dati Reali Aziendali\n${context.report}`
+          : `${BRAIN_SYSTEM_PROMPT}\n\n## Dati Reali Aziendali\n${context.report}`,
       },
       ...recentHistory
         .filter((m) => m.role === 'user' || m.role === 'assistant')
