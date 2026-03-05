@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import BrainMessage from './BrainMessage'
 import BrainInput from './BrainInput'
 
@@ -77,6 +77,7 @@ export default function BrainDrawer({
   const [showHistory, setShowHistory] = useState(false)
   const [manualMode, setManualMode] = useState(false)
   const [savingDraft, setSavingDraft] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const messagesRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -86,10 +87,11 @@ export default function BrainDrawer({
   }, [messages, loading])
 
   // Parse last assistant message for manual draft
-  const lastAssistant = messages.filter((m) => m.role === 'assistant').at(-1)
-  const manualDraft = manualMode && lastAssistant
-    ? parseManualDraft(lastAssistant.content)
-    : null
+  const manualDraft = useMemo(() => {
+    if (!manualMode) return null
+    const last = messages.filter((m) => m.role === 'assistant').at(-1)
+    return last ? parseManualDraft(last.content) : null
+  }, [manualMode, messages])
 
   const handleSend = () => {
     onSend(manualMode ? { mode: 'manual' } : undefined)
@@ -98,15 +100,19 @@ export default function BrainDrawer({
   const handleManualSave = async () => {
     if (!manualDraft || !onManualSave) return
     setSavingDraft(true)
+    setSaveError(null)
     try {
       await onManualSave(manualDraft)
       setManualMode(false)
+    } catch {
+      setSaveError('Errore durante il salvataggio. Riprova.')
     } finally {
       setSavingDraft(false)
     }
   }
 
   const handleToggleManual = () => {
+    setSaveError(null)
     setManualMode(!manualMode)
   }
 
@@ -233,7 +239,7 @@ export default function BrainDrawer({
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
-                    onClick={() => { onInputChange(s); onSend() }}
+                    onClick={() => { onInputChange(s); handleSend() }}
                     className="text-left text-xs p-3 rounded-xl border border-slate-200 dark:border-zinc-700 hover:border-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all text-slate-600 dark:text-slate-300"
                   >
                     💡 {s}
@@ -295,6 +301,9 @@ export default function BrainDrawer({
                 ✏️
               </button>
             </div>
+            {saveError && (
+              <p className="mt-2 text-xs text-red-600 dark:text-red-400">{saveError}</p>
+            )}
           </div>
         )}
 
