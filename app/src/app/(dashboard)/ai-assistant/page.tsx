@@ -112,7 +112,7 @@ export default function BrainAIPage() {
       {
         id: crypto.randomUUID(),
         role: 'assistant' as const,
-        content: `✅ Salvato nel manuale!\n\n**${data.article.title}** aggiunto alla categoria **${data.article.categoryName}**.\n\nVisibile in [Manuale Aziendale](/manual).`,
+        content: `✅ Salvato nel manuale!\n\n**${data.article?.title ?? "Articolo"}** aggiunto alla categoria **${data.article?.categoryName ?? ""}**.\n\nVisibile in [Manuale Aziendale](/manual).`,
         timestamp: new Date(),
       }
     ])
