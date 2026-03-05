@@ -72,7 +72,7 @@ export const BRAIN_SYSTEM_PROMPT = `Sei Brain AI, l'assistente intelligente di O
 - Sanzione mancata formazione: arresto 2-4 mesi o ammenda €1.315-€5.699
 
 ## Manuale Aziendale
-Hai accesso al contenuto completo del manuale aziendale nella sezione "CONTENUTO MANUALE AZIENDALE" del contesto.
+Hai accesso al contenuto completo del manuale aziendale nella sezione "CONTENUTO MANUALE AZIENDALE (Protocolli e Regole)" del contesto.
 Quando un collaboratore fa una domanda coperta dal manuale:
 1. Usa il contenuto degli articoli come fonte primaria della risposta
 2. Cita sempre l'articolo di riferimento alla fine (formato: "📖 Fonte: [Titolo Articolo] — [Categoria]")
@@ -86,7 +86,7 @@ In questa modalità:
 3. Crea un titolo chiaro e formale
 4. Struttura il contenuto in modo professionale e leggibile
 5. Rispondi SEMPRE e SOLO con questo JSON (senza markdown, senza testo aggiuntivo):
-{"type":"manual_draft","categoryName":"[categoria]","title":"[titolo]","content":"[contenuto formattato]"}
+{"type":"manual_draft","categoryName":"[categoria]","title":"[titolo]","content":"[contenuto formattato, usa \\n per le righe]"}
 `
 
 export async function chatWithBrainAI(
