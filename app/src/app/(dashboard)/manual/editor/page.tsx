@@ -1,10 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import ArticleContent from '@/components/manual/ArticleContent'
+import MediaToolbar from '@/components/manual/MediaToolbar'
+
+const IMAGE_EXTENSIONS = /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i
+const YOUTUBE_PATTERN = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/
 
 export default function NewArticlePage() {
   const router = useRouter()
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [content, setContent] = useState('')
@@ -26,22 +32,53 @@ export default function NewArticlePage() {
 
   const generateSlug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
+  const handleInsertMedia = useCallback((tag: string) => {
+    const textarea = textareaRef.current
+    if (!textarea) {
+      setContent(prev => prev + '\n' + tag)
+      return
+    }
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const newContent = content.slice(0, start) + '\n' + tag + '\n' + content.slice(end)
+    setContent(newContent)
+    requestAnimationFrame(() => {
+      const pos = start + tag.length + 2
+      textarea.setSelectionRange(pos, pos)
+      textarea.focus()
+    })
+  }, [content])
+
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const text = e.clipboardData.getData('text').trim()
+    if (!text) return
+
+    let tag: string | null = null
+    if (YOUTUBE_PATTERN.test(text)) {
+      tag = `[video:${text}]`
+    } else if (IMAGE_EXTENSIONS.test(text)) {
+      tag = `[img:${text}]`
+    }
+
+    if (tag) {
+      e.preventDefault()
+      const textarea = e.currentTarget
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      const newContent = content.slice(0, start) + tag + content.slice(end)
+      setContent(newContent)
+      requestAnimationFrame(() => {
+        const pos = start + tag!.length
+        textarea.setSelectionRange(pos, pos)
+      })
+    }
+  }, [content])
+
   const handleSave = async (status: string) => {
     setError('')
-
-    // Validazione frontend
-    if (!title.trim()) {
-      setError('Il titolo è obbligatorio')
-      return
-    }
-    if (!categoryId) {
-      setError('Seleziona una categoria')
-      return
-    }
-    if (!content.trim()) {
-      setError('Il contenuto è obbligatorio')
-      return
-    }
+    if (!title.trim()) { setError('Il titolo è obbligatorio'); return }
+    if (!categoryId) { setError('Seleziona una categoria'); return }
+    if (!content.trim()) { setError('Il contenuto è obbligatorio'); return }
 
     setSaving(true)
     try {
@@ -55,7 +92,7 @@ export default function NewArticlePage() {
         const data = await res.json()
         setError(data.error || 'Errore durante il salvataggio')
       }
-    } catch (err) {
+    } catch {
       setError('Errore di connessione')
     } finally {
       setSaving(false)
@@ -97,8 +134,14 @@ export default function NewArticlePage() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Contenuto (Markdown) <span className="text-red-500">*</span></label>
-              <textarea value={content} onChange={e => setContent(e.target.value)} rows={20}
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Contenuto <span className="text-red-500">*</span></label>
+              <MediaToolbar onInsert={handleInsertMedia} />
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                onPaste={handlePaste}
+                rows={20}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white font-mono text-sm"
                 placeholder="# Titolo&#10;&#10;Contenuto..." />
             </div>
@@ -114,7 +157,12 @@ export default function NewArticlePage() {
         </div>
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
           <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Anteprima</h3>
-          <div className="prose dark:prose-invert max-w-none whitespace-pre-wrap">{content || 'Inizia a scrivere per vedere l\'anteprima...'}</div>
+          <div className="prose dark:prose-invert max-w-none">
+            {content
+              ? <ArticleContent content={content} />
+              : <span className="text-gray-400">Inizia a scrivere per vedere l&apos;anteprima...</span>
+            }
+          </div>
         </div>
       </div>
     </div>

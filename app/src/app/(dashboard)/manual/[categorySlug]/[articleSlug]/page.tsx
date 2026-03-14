@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { use } from 'react'
+import ArticleContent from '@/components/manual/ArticleContent'
 
 export default function ArticleViewerPage({ params }: { params: Promise<{ categorySlug: string; articleSlug: string }> }) {
   const { categorySlug, articleSlug } = use(params)
@@ -49,8 +50,8 @@ export default function ArticleViewerPage({ params }: { params: Promise<{ catego
               </p>
             </div>
 
-            <div className="prose dark:prose-invert max-w-none whitespace-pre-wrap text-gray-800 dark:text-gray-200 leading-relaxed">
-              {article.content}
+            <div className="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed">
+              <ArticleContent content={article.content} />
             </div>
 
             <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">

@@ -1,12 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { use } from 'react'
+import ArticleContent from '@/components/manual/ArticleContent'
+import MediaToolbar from '@/components/manual/MediaToolbar'
+
+const IMAGE_EXTENSIONS = /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i
+const YOUTUBE_PATTERN = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/
 
 export default function EditArticlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [changeNote, setChangeNote] = useState('')
@@ -18,6 +24,48 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
       setContent(a.content || '')
     })
   }, [id])
+
+  const handleInsertMedia = useCallback((tag: string) => {
+    const textarea = textareaRef.current
+    if (!textarea) {
+      setContent(prev => prev + '\n' + tag)
+      return
+    }
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const newContent = content.slice(0, start) + '\n' + tag + '\n' + content.slice(end)
+    setContent(newContent)
+    requestAnimationFrame(() => {
+      const pos = start + tag.length + 2
+      textarea.setSelectionRange(pos, pos)
+      textarea.focus()
+    })
+  }, [content])
+
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const text = e.clipboardData.getData('text').trim()
+    if (!text) return
+
+    let tag: string | null = null
+    if (YOUTUBE_PATTERN.test(text)) {
+      tag = `[video:${text}]`
+    } else if (IMAGE_EXTENSIONS.test(text)) {
+      tag = `[img:${text}]`
+    }
+
+    if (tag) {
+      e.preventDefault()
+      const textarea = e.currentTarget
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      const newContent = content.slice(0, start) + tag + content.slice(end)
+      setContent(newContent)
+      requestAnimationFrame(() => {
+        const pos = start + tag!.length
+        textarea.setSelectionRange(pos, pos)
+      })
+    }
+  }, [content])
 
   const handleSave = async () => {
     setSaving(true)
@@ -37,8 +85,16 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-4">
           <input type="text" value={title} onChange={e => setTitle(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-lg font-semibold" />
-          <textarea value={content} onChange={e => setContent(e.target.value)} rows={20}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white font-mono text-sm" />
+          <div>
+            <MediaToolbar onInsert={handleInsertMedia} />
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              onPaste={handlePaste}
+              rows={20}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white font-mono text-sm" />
+          </div>
           <input type="text" value={changeNote} onChange={e => setChangeNote(e.target.value)} placeholder="Note di revisione..."
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
           <div className="flex gap-4">
@@ -48,7 +104,9 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
         </div>
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
           <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Anteprima</h3>
-          <div className="prose dark:prose-invert max-w-none whitespace-pre-wrap">{content}</div>
+          <div className="prose dark:prose-invert max-w-none">
+            <ArticleContent content={content} />
+          </div>
         </div>
       </div>
     </div>
